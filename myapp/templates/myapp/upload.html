@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+</head>
+
+<body>
+
+<h2>Upload File</h2>
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Upload</button>
+</form>
+
+
+<div>
+  {%if message %}
+  <p>{{ message|linebreaks }}</p>
+  {% endif %}
+</div>
+
+<div>
+{% if error %}
+    <p class="error">{{ error }}</p>
+{% endif %}
+</div>
+
+<script>
+  // Check if there is a message
+  if (document.getElementById("message").innerText.trim() !== "") {
+    // Set a timeout to hide the message after 2 seconds
+    setTimeout(function() {
+      document.getElementById("message").style.display = "none";
+    }, 2000);
+  }
+  </script>
+
+</body>
+</html>
