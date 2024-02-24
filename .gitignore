@@ -3,3 +3,11 @@
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
+.env
+.vscode/settings.json
+
+# Virtual environment
+venv/
+
+
+
