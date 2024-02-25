@@ -128,4 +128,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-ALLOWED_HOSTS = ['sea-turtle-app-dr5wz.ondigitalocean.app', 'www.relogue.com']
+ALLOWED_HOSTS = ['sea-turtle-app-dr5wz.ondigitalocean.app', 'www.relogue.com', 'relogue.com', 'localhost']
