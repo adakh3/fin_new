@@ -43,33 +43,33 @@ class HandleUploadedFile:
                 data = pd.read_excel(self.filepath, skiprows=range(start_row))
             else:
                 data = pd.DataFrame()
+
+        if len(data.columns) < 1:
+            raise Exception("File does not contain any data. Please upload a file with data.")
+            
+        
         return data
 
 
     # clean the data 
     def clean_data(self, data):
+
         # remove rows with all NaNs
         data = data.dropna(axis=0, how='all')
         # remove columns with all NaNs
         data = data.dropna(axis=1, how='all')
 
-
-        # print basic information about the data
-        print ('Data before transformation ********')
-
-        #print("Shape of the data: ", data.shape)
-        print("Column names: ", data.columns)
-        #print("Number of null values in each column: ", data.isnull().sum())
-        print("Data types of each column: ", data.dtypes)
-        print("Summary of the data: ")
-        print(data.describe(include='all'))
-        print(data.iloc[:,0])
-
-
         #rename the columns
-        data.columns = ['Accounts', 'Period 2 values', 'Period 1 values', 'Change in values', 'Percentage change']
 
+        expected_columns = ['Accounts', 'Period 2 values', 'Period 1 values', 'Change in values', 'Percentage change']
+        print (len(data.columns))
 
+        if len(data.columns) < len(expected_columns):
+            print ('Expected columns not found in the data. Adding missing columns.')
+            missing_columns = len(expected_columns) - len(data.columns)
+            data[expected_columns[-missing_columns:]] = np.nan
+        
+        data.columns = expected_columns
         
         return data
 
@@ -105,14 +105,6 @@ class HandleUploadedFile:
 
             data['Change in percentage of sales'] = data['Percentage of sales period 2'] - data['Percentage of sales period 1'] 
 
-            print ('Data after transformation ********')
-            #print("Shape of the data: ", data.shape)
-            print("Column names: ", data.columns)
-            #print("Number of null values in each column: ", data.isnull().sum())
-            print("Data types of each column: ", data.dtypes)
-            print("Summary of the data: ")
-
-
         return data
 
     # structure the data into hierarchy (accounts and sub accounts) - will do this later
@@ -146,6 +138,21 @@ class HandleUploadedFile:
              Make sure to  look at all the columns for your analysis and explanation.
              
              Finally summarize your analysis especially giving insights about net profits.
+
+             Structure your respond with headings and formating, suiteable for a business report, and 
+             suitable for html rendering. Headings will be <h3> and <h4> tags.
+
+             Headings shougld always be exactly as follows:
+                - Introduction
+                - Revenues
+                - Costs of sales
+                - Gross profit
+                - Administrative costs
+                - Other income and costs
+                - Net profit
+                - Discrepencies
+                - Summary
+             
              '''},
             {"role": "user", "content": f"Here is a CSV dataset:\n{csv_text}\nNow, perform some analysis on this data.",}
             ]
@@ -166,6 +173,7 @@ class HandleUploadedFile:
         savedFilename = 'uploaded_files/cleaned_data_' + self.filename + '.xlsx'
         data.to_excel(savedFilename, index=False)
         data = self.send_to_AI(data)
+
         #print (data)
         return data
 

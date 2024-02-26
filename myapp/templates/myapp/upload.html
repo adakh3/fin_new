@@ -18,8 +18,8 @@
 
 
 <div>
-  {%if message %}
-  <p>{{ message|linebreaks }}</p>
+  {% if message %}
+    <p>{{ message|safe }}</p>
   {% endif %}
 </div>
 
