@@ -5,21 +5,35 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
+  <style>
+    .output-box {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin: 10px;
+      width: 600px; /* or any other width */
+      height: 800px; /* or any other height */
+      overflow: auto; /* to handle overflow of text */
+      background-color: #f9f9f9; /* light grey background */
+    }
+    </style>
 </head>
 
 <body>
 
-<h2>Upload File</h2>
-<form method="post" enctype="multipart/form-data">
+<h2>Profit and Loss Analyser</h2>
+<div> Upload a 'Profit and Loss Comparison Report' from Quicbooks (with value and % changes), exported into excel.</div>
+<form id='yourFormId' method="post" enctype="multipart/form-data">
   {% csrf_token %}
   {{ form.as_p }}
-  <button type="submit">Upload</button>
+  <button type="submit" id="uploadButton">Upload</button>
 </form>
 
 
-<div>
+<div class="output-box">
   {% if message %}
-    <p>{{ message|safe }}</p>
+    <p id="outputMessage">{{ message|safe }}</p>
+  {% else %}
+    <p id="outputMessage"></p>
   {% endif %}
 </div>
 
@@ -30,14 +44,38 @@
 </div>
 
 <script>
-  // Check if there is a message
-  if (document.getElementById("message").innerText.trim() !== "") {
-    // Set a timeout to hide the message after 2 seconds
-    setTimeout(function() {
-      document.getElementById("message").style.display = "none";
-    }, 2000);
-  }
-  </script>
+/*
+  document.getElementById('uploadButton').addEventListener('click', function(event) {
+    // Prevent the form from being submitted
+    //event.preventDefault();
+
+    // Update the output box
+    document.getElementById('outputMessage').textContent = 'Please wait while we get your insights...';
+
+    // Your upload logic here...
+});
+*/
+
+/*
+  document.getElementById('uploadButton').addEventListener('click', function(event) {
+  // Prevent the form from being submitted immediately
+  event.preventDefault();
+
+  // Update the output box
+  document.getElementById('outputMessage').textContent = 'Please wait while we process your request...';
+
+  // Disable the upload button
+  document.getElementById('uploadButton').disabled = true;
+
+  // Submit the form programmatically
+  //document.getElementById('yourFormId').submit();
+  // Submit the form programmatically after a slight delay
+  setTimeout(function() {
+  document.getElementById('yourFormId').submit();
+  },  100); // Adjust the delay as needed
+*/
+</script>
+
 
 </body>
 </html>

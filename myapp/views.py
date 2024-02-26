@@ -17,7 +17,7 @@ def upload_file_view(request):
         if form.is_valid():
             response = handle_file(request.FILES['file'], request )
             print('Form submitted')
-            print (response)
+            #print (response)
             return render(request, 'myapp/upload.html', {'form': form, 'message': response})
             
             
