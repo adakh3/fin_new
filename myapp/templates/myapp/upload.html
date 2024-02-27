@@ -21,7 +21,8 @@
 <body>
 
 <h2>Profit and Loss Analyser</h2>
-<div> Upload a 'Profit and Loss Comparison Report' from Quicbooks with value and % changes, exported into Excel in .xlsx format.</div>
+<h4>Let AI analyse your P&L and give back inisghts</h4>
+<div> Upload a Quickbooks 'Profit and Loss Comparison Report' with value and % changes exported into .xlsx </div>
 <form id='yourFormId' method="post" enctype="multipart/form-data">
   {% csrf_token %}
   {{ form.as_p }}
