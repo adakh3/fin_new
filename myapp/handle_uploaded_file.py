@@ -6,6 +6,8 @@ import os
 import openai
 from datetime import datetime
 from openai import OpenAI
+from openpyxl import load_workbook
+
 
 
 
@@ -27,7 +29,23 @@ class HandleUploadedFile:
 
     #load the data from an excel file 
     def find_data_start(self):
+
+        # Load the workbook
+        #wb = load_workbook(self.filepath)
+
+        # Save the workbook
+        #wb.save(filename=self.filepath)
+
+
         data = pd.read_excel(self.filepath)
+
+        df_numeric = data.select_dtypes(include=[np.number])
+
+         # Check if all numeric values are zero
+        if (df_numeric == 0).all().all():
+            return("Zero value error")
+    
+        
         for i, row in data.iterrows():
             if not row.isnull().any():
                 if i == 0:
@@ -211,6 +229,8 @@ class HandleUploadedFile:
     def main(self):        
         #calling all the functions now 
         i = self.find_data_start()
+        if i == 'Zero value error':
+            return 'Unable to read the data. Please open the file in Excel, save it, and try again.'
         
         data = self.clean_data(self.load_data_table(i))
         print('Data cleaned', str(datetime.now().time()))
