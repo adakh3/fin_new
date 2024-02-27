@@ -39,13 +39,6 @@ class HandleUploadedFile:
 
         data = pd.read_excel(self.filepath)
 
-        df_numeric = data.select_dtypes(include=[np.number])
-
-         # Check if all numeric values are zero
-        if (df_numeric == 0).all().all():
-            return("Zero value error")
-    
-        
         for i, row in data.iterrows():
             if not row.isnull().any():
                 if i == 0:
@@ -89,6 +82,17 @@ class HandleUploadedFile:
             data[expected_columns[-missing_columns:]] = np.nan
         
         data.columns = expected_columns
+
+        # Select specific columns
+        columns_to_check = ['Period 2 values', 'Period 1 values']
+        df_selected = data[columns_to_check]
+
+        # Check if all values are zero or NaN
+        if (df_selected.isna() | (df_selected == 0)).all().all():
+            return None
+        
+        #if (df_numeric == 0).all().all():
+         #   return("Zero value error")
         
         return data
 
@@ -229,10 +233,11 @@ class HandleUploadedFile:
     def main(self):        
         #calling all the functions now 
         i = self.find_data_start()
-        if i == 'Zero value error':
-            return 'Unable to read the data. Please open the file in Excel, save it, and try again.'
-        
+                
         data = self.clean_data(self.load_data_table(i))
+        if data is None:
+            return 'The file is empty or might have formatting issues. Please open the file in Excel, save it, and try again.'
+
         print('Data cleaned', str(datetime.now().time()))
 
         dataDetails = self.mark_account_types(data, 'Income')
@@ -263,7 +268,5 @@ class HandleUploadedFile:
         
         #now similarly get analysis on income accounts only
 
-        
-        
         return data
 
