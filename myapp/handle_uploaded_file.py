@@ -6,7 +6,7 @@ import os
 import openai
 from datetime import datetime
 from openai import OpenAI
-from openpyxl import load_workbook
+from itertools import combinations
 
 
 
@@ -49,6 +49,8 @@ class HandleUploadedFile:
 
 
     def load_data_table(self, start_row):
+
+        data = pd.DataFrame()
         if start_row is not None:
             start_row = self.find_data_start()
             if start_row is not None:
@@ -91,9 +93,6 @@ class HandleUploadedFile:
         if (df_selected.isna() | (df_selected == 0)).all().all():
             return None
         
-        #if (df_numeric == 0).all().all():
-         #   return("Zero value error")
-        
         return data
 
 
@@ -135,6 +134,7 @@ class HandleUploadedFile:
     def mark_account_types(self, data, accountType):
         # Find the indices of the rows where column 1 between account type and total account type
         
+        #todo: improve this section 
         matching_rows_start = data[data['Accounts'] == accountType]
         if matching_rows_start.empty:
             print(f"No rows with accountType: {accountType}")
@@ -149,13 +149,30 @@ class HandleUploadedFile:
         end_index = matching_rows_end.index[0] - 1
 
 
-        # Add the 'account type' column for the rows between start_index and end_index
+
+        # Add the 'account type' column for the rows between start_index and end_index    
         data.loc[start_index:end_index, 'Account type'] = accountType
+
+        data.loc[start_index:end_index, 'Account hierarchy'] = np.nan
+
 
         # Set 'Account type' to none for rows where 'Accounts' contains 'total'
         mask = data['Accounts'].str.contains('total', case=False)
-        data.loc[mask, 'Account type'] = np.nan
+        data.loc[mask, 'Account hierarchy'] = 'Subtotals'
 
+        
+        # Set 'Account type' to none for rows where the account is an account group
+        mask2 = data['Period 1 values'].isnull() & data['Period 2 values'].isnull()
+        data.loc[mask2, 'Account hierarchy'] = 'Account group'
+        
+        
+
+
+
+        mask1 = data.iloc[start_index:end_index, 1].isnull() & data.iloc[start_index:end_index, 2].isnull()
+
+        # Set 'Account type' to none for rows where numbers are subtotals of any kind
+        #data.loc[mask1, 'Account type'] = np.nan
 
         titles_to_keep = ['Total Income', 'Total Cost of Sales', 'Gross Profit', 'Total Expenses', 'Net Earnings', 'Total Other Expenses', 'Total Other Income(Loss)']
 
@@ -167,8 +184,6 @@ class HandleUploadedFile:
 
         return data
 
-
-    # structure the data into hierarchy (accounts and sub accounts) - will do this later
 
 
     #analyse the data starting with revenues, gross proits, net profits and other KPIs, and then details 
@@ -194,16 +209,16 @@ class HandleUploadedFile:
              and provide your insight as well. If there are any discrepencies in the 
              data, or things you cant explain from the data, point those out too. 
              
-             Make sure to  look at all the columns for your analysis and explanation, especially percentage of sales.
+             Make sure to  look at all the columns in data for your analysis and explanation, especially percentage of sales
              
              Start with a summary of your analysis especially giving insights about net profits, and then delve deeper
 
-             Structure your respond with headings and formating, suiteable for a business report, and 
+             Structure your response with headings and formating, suiteable for a business report, and 
              suitable for html rendering. Headings will be <h3> and <h4> tags.
 
              - First go through the 'account type' column and summarise key KPIs, then similarly go through the 
-             'account type' columns and summarise 'Income' accounts, then 'Expense' accounts and so on. With these non-KPI 
-             accounts, ignore the ones with low % to sales unless the increase is significant.
+             'account type' columns and summarise 'Income' accounts, then 'Expense' accounts and so on. 
+             
 
              Output structure and headings shougld always be exactly as follows:
                 - Summary
@@ -225,9 +240,6 @@ class HandleUploadedFile:
         )
 
         return completion.choices[0].message.content
-
-
-
 
 
     def main(self):        
