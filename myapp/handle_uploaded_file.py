@@ -6,7 +6,9 @@ import os
 import openai
 from datetime import datetime
 from openai import OpenAI
-from itertools import combinations
+import string
+import tiktoken
+
 
 
 
@@ -73,8 +75,7 @@ class HandleUploadedFile:
         # remove columns with all NaNs
         data = data.dropna(axis=1, how='all')
 
-        #rename the columns
-
+        #rename some of the columns
         expected_columns = ['Accounts', 'Period 2 values', 'Period 1 values', 'Change in values', 'Percentage change']
         print (len(data.columns))
 
@@ -83,11 +84,18 @@ class HandleUploadedFile:
             missing_columns = len(expected_columns) - len(data.columns)
             data[expected_columns[-missing_columns:]] = np.nan
         
-        data.columns = expected_columns
+        #renaming some of the columns for better AI readability
+        data.rename(columns={data.columns[0]: expected_columns[0], 
+                     data.columns[3]: expected_columns[3], 
+                     data.columns[4]: expected_columns[4]}, inplace=True)
+        
 
         # Select specific columns
-        columns_to_check = ['Period 2 values', 'Period 1 values']
+        columns_to_check = [data.columns[1], data.columns[2]]
         df_selected = data[columns_to_check]
+
+
+        data['Accounts'] = data['Accounts'].apply(lambda x: str(x).lstrip().lstrip(string.digits))
 
         # Check if all values are zero or NaN
         if (df_selected.isna() | (df_selected == 0)).all().all():
@@ -95,47 +103,50 @@ class HandleUploadedFile:
         
         return data
 
-
-    def key_kpis(self, data):
-        titles_to_keep = ['Total Income', 'Total Cost of Sales', 'Gross Profit', 'Total Expenses', 'Net Earnings', 'Total Other Expenses', 'Total Other Income(Loss)']
+    #separate out what we need from the data, by account type 
+    ''''Income', 'Cost of Sales', 'Expenses', 'Other Income(Loss)','Other Expenses', 'Key KPI', 'All')'''
+    def select_data(self, data, account_type):
+        #titles_to_keep = ['Total Income', 'Total Cost of Sales', 'Gross Profit', 'Total Expenses', 'Net Earnings', 'Total Other Expenses', 'Total Other Income(Loss)']
+        
+        if account_type == 'All':
+            return data
+        else:
+            data = data[data['Account type'] == account_type]
 
         # Create a boolean mask
-        mask = data.iloc[:, 0].isin(titles_to_keep)
-
+        #mask = data.iloc[:, 0].isin(titles_to_keep)
         # Index the DataFrame with the mask
-        data = data[mask]
-
+        #data = data[mask]
         return data
-
-
+    
+    
     def add_more_columns(self, data):
-        # add more columns to the data
+    # add more columns to the data
 
         if data is not None:
 
-            total_income_period_1 = data.loc[data['Accounts'] == 'Total Income', 'Period 1 values'].values[0]
-            
+            total_income_period_1 = data.loc[data.iloc[:, 0] == 'Total Income', data.columns[1]].values[0]
+
             try:
-                data['Percentage of sales period 1'] = data['Period 1 values'] / total_income_period_1 * 100
+                data['Percentage of sales period 1'] = data.iloc[:, 1] / total_income_period_1 * 100
             except:
                 print ('Division by zero error')
                 data ['Percentage of sales period 1'] = 0
 
-            total_income_period_2 = data.loc[data['Accounts'] == 'Total Income', 'Period 2 values'].values[0]
-            data['Percentage of sales period 2'] = data['Period 2 values'] / total_income_period_2 * 100
+            total_income_period_2 = data.loc[data.iloc[:, 0] == 'Total Income', data.columns[2]].values[0]
+            data['Percentage of sales period 2'] = data.iloc[:, 2] / total_income_period_2 * 100
 
             data['Change in percentage of sales'] = data['Percentage of sales period 2'] - data['Percentage of sales period 1'] 
-            data ['Account type'] = np.nan
 
         return data
-    
+
 
         #from data mark all the accounts that are income accounts, where account type is the type of account
     def mark_account_types(self, data, accountType):
         # Find the indices of the rows where column 1 between account type and total account type
-        
         #todo: improve this section 
         matching_rows_start = data[data['Accounts'] == accountType]
+
         if matching_rows_start.empty:
             print(f"No rows with accountType: {accountType}")
             return data
@@ -147,138 +158,109 @@ class HandleUploadedFile:
             print(f"No rows with 'Total {accountType}'")
             return data
         end_index = matching_rows_end.index[0] - 1
-
-
-
+        
         # Add the 'account type' column for the rows between start_index and end_index    
         data.loc[start_index:end_index, 'Account type'] = accountType
-
         data.loc[start_index:end_index, 'Account hierarchy'] = np.nan
-
-
+        
         # Set 'Account type' to none for rows where 'Accounts' contains 'total'
         mask = data['Accounts'].str.contains('total', case=False)
         data.loc[mask, 'Account hierarchy'] = 'Subtotals'
-
         
         # Set 'Account type' to none for rows where the account is an account group
-        mask2 = data['Period 1 values'].isnull() & data['Period 2 values'].isnull()
+        mask2 = data.iloc[:, 1].isnull() & data.iloc[:, 2].isnull()
         data.loc[mask2, 'Account hierarchy'] = 'Account group'
-        
-        
-
-
-
         mask1 = data.iloc[start_index:end_index, 1].isnull() & data.iloc[start_index:end_index, 2].isnull()
-
+        
         # Set 'Account type' to none for rows where numbers are subtotals of any kind
         #data.loc[mask1, 'Account type'] = np.nan
-
         titles_to_keep = ['Total Income', 'Total Cost of Sales', 'Gross Profit', 'Total Expenses', 'Net Earnings', 'Total Other Expenses', 'Total Other Income(Loss)']
-
+        
         # Create a boolean mask
         mask = data.iloc[:, 0].isin(titles_to_keep)
-
+        
         # Index the DataFrame with the mask
         data.loc[mask, 'Account type'] = 'Key KPI'
 
         return data
 
-
-
     #analyse the data starting with revenues, gross proits, net profits and other KPIs, and then details 
-
-
-
     #send to AI for human language interpretation
-    def send_to_AI(self, data):
-
+    def send_to_AI(self, data, prompt_file_path):
+        #prompt2 gves much worse results - so I think my original prompt is better
+        with open(prompt_file_path, 'r') as file: 
+            prompt = file.read()
         csv_text = data.to_csv(index=False)
-
         completion = self.client.chat.completions.create(
-        #model="gpt-3.5-turbo",
-        model ="gpt-4-turbo-preview",
+        model = "gpt-4-turbo-preview",#"gpt-3.5-turbo",
         messages=[
-            {"role": "system", "content": '''You are an expert in finacial analysis 
-             and describe your analysis to business owners who only have rudimentary 
-             financial knowledge, so you expain it to them in easy language. 
-             
-             Focusing only on important considerations rather than a line by line analysis. 
-
-             In additio to re-iterating numbers, also mentione precentages where necessary, 
-             and provide your insight as well. If there are any discrepencies in the 
-             data, or things you cant explain from the data, point those out too. 
-             
-             Make sure to  look at all the columns in data for your analysis and explanation, especially percentage of sales
-             
-             Start with a summary of your analysis especially giving insights about net profits, and then delve deeper
-
-             Structure your response with headings and formating, suiteable for a business report, and 
-             suitable for html rendering. Headings will be <h3> and <h4> tags.
-
-             - First go through the 'account type' column and summarise key KPIs, then similarly go through the 
-             'account type' columns and summarise 'Income' accounts, then 'Expense' accounts and so on. 
-             
-
-             Output structure and headings shougld always be exactly as follows:
-                - Summary
-                - Revenues
-                - Costs of Goods Sold   
-                - Gross Profits
-                - Administrative Costs
-                - Other Income and Costs
-                - Net Profits
-                - Discrepencies
-                
-             
-
-
-            In the end summarise the entire analysis and provide insights about net profits.   
-             '''},
+            {"role": "system", "content": prompt},
             {"role": "user", "content": f"Here is a CSV dataset:\n{csv_text}\nNow, perform some analysis on this data.",}
             ]
         )
-
         return completion.choices[0].message.content
 
 
-    def main(self):        
+    def main(self, insights_preference):        
         #calling all the functions now 
-        i = self.find_data_start()
-                
+        i = self.find_data_start() 
         data = self.clean_data(self.load_data_table(i))
         if data is None:
             return 'The file is empty or might have formatting issues. Please open the file in Excel, save it, and try again.'
-
         print('Data cleaned', str(datetime.now().time()))
+        
+        #todo: refactor this 
+        data = self.mark_account_types(data, 'Income')
+        data = self.mark_account_types(data, 'Cost of Sales')
+        data = self.mark_account_types(data, 'Expenses')
+        data = self.mark_account_types(data, 'Other Income(Loss)')
+        data = self.mark_account_types(data, 'Other Expenses')
 
-        dataDetails = self.mark_account_types(data, 'Income')
-        dataDetails = self.mark_account_types(data, 'Cost of Sales')
-        dataDetails = self.mark_account_types(data, 'Expenses')
-        dataDetails = self.mark_account_types(data, 'Other Income(Loss)')
-        dataDetails = self.mark_account_types(data, 'Other Expenses')
         #to delete these checks later
         print('Account types marked', str(datetime.now().time()))
         savedFilename = 'uploaded_files/cleaned_data_all_accounts' + self.filename
-        data.to_excel(savedFilename, index=False)
-        print('File with all accounts saved ' + str(datetime.now().time()))
 
-        data = self.add_more_columns(dataDetails)
+        print('File with all accounts saved ' + str(datetime.now().time()))
+        data = self.add_more_columns(data)
+        
+        #print some stats 
         print('More columns added ' + str(datetime.now().time()))
-        
-        '''
-        #first get analysis on key KPIs
-        data = self.key_kpis(dataDetails)
-        savedFilename = 'uploaded_files/cleaned_data_' + self.filename
-        print('Data saved to: ', savedFilename, str(datetime.now().time()))
-        data.to_excel(savedFilename, index=False)
-       '''
-        
+ 
+
+        #select the data to send to AI based on user input 
+        ''''Income', 'Cost of Sales', 'Expenses', 'Other Income(Loss)','Other Expenses', 'Key KPI', 'All')'''
+        #switch statement here with 5 options for account type
+        if(insights_preference == 'Income'):
+            data = self.select_data(data, 'Income')
+        elif(insights_preference == 'Cost of Sales'):
+            data = self.select_data(data, 'Cost of Sales')
+        elif(insights_preference == 'Expenses'):
+            data = self.select_data(data, 'Expenses')
+        elif(insights_preference == 'Other Income(Loss)'):
+            data = self.select_data(data, 'Other Income(Loss)')
+        elif(insights_preference == 'Other Expenses'):
+            data = self.select_data(data, 'Other Expenses')
+        elif(insights_preference == 'Key KPI'):
+            data = self.select_data(data, 'Key KPI')
+        else:
+            data = self.select_data(data, 'All')
+
+        print('Number of rows in data: ', len(data))
+        print('Number of columns in data: ', len(data.columns))
         print('Data being sent to AI for analysis and interpretation ' + str(datetime.now().time()))
-        data = self.send_to_AI(data)
+        
+        #save the data being sent as a new file for refernce
+        data.to_excel(savedFilename, index=False)
+        if(insights_preference == 'All' or insights_preference == 'Key KPI'):
+            prompt_file_path = 'resources/prompt.txt'
+        else:
+            prompt_file_path = 'resources/prompt_category.txt'
+
+        aiResponse = None
+        aiResponse = self.send_to_AI(data, prompt_file_path)
         print('Data returned from AI ' + str(datetime.now().time()))
         
         #now similarly get analysis on income accounts only
 
-        return data
+        return aiResponse
 

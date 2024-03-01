@@ -6,77 +6,94 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f9f9f9;
+    }
+
+    .container {
+      width: 80%;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
     .output-box {
       border: 1px solid #ccc;
       padding: 10px;
-      margin: 10px;
-      width: 600px; /* or any other width */
-      height: 800px; /* or any other height */
-      overflow: auto; /* to handle overflow of text */
-      background-color: #f9f9f9; /* light grey background */
+      margin-top: 20px;
+      height: 800px;
+      overflow: auto;
+      background-color: #fff;
     }
-    </style>
+
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+
+    select{
+      margin-top: 20px;
+      max-width: 400px;
+    }
+
+    button
+    {
+      max-width: 300px;
+      margin: 20px 0;
+      display: block;
+      background-color: #4CAF50; /* Green background */
+      color: white; /* White text */
+      padding: 14px 20px; /* Some padding */
+      border: none; /* No border */
+      border-radius: 4px; /* Rounded corners */
+      cursor: pointer; /* Add a pointer cursor on mouse-over */
+    }
+
+
+
+    .error {
+      color: red;
+    }
+  </style>
 </head>
 
 <body>
+  <div class="container">
+    <h2>Relogue AI - Profit & Loss Analyser</h2>
+    <h4>Instant, In-depth Insights from Your QuickBooks P&L using our best in class AI</h4>
+    <p>Simply export your QuickBooks 'Profit and Loss Comparison Report', including 'value' and 'percentage' changes, into an .xlsx file and upload.</p>
 
-<h2>Profit and Loss Analyser</h2>
-<h4>Let AI analyse your P&L and give back inisghts</h4>
-<div> Upload a Quickbooks 'Profit and Loss Comparison Report' with value and % changes exported into .xlsx </div>
-<form id='yourFormId' method="post" enctype="multipart/form-data">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit" id="uploadButton">Upload</button>
-</form>
+    {% if error %}
+      <p class="error">{{ error }}</p>
+    {% endif %}
 
+    <form id='yourFormId' method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ form.as_p }}
 
-<div class="output-box">
-  {% if message %}
-    <p id="outputMessage">{{ message|safe }}</p>
-  {% else %}
-    <p id="outputMessage"></p>
-  {% endif %}
-</div>
+      <label for="insights">What would you like to analyse?</label>
+      <select name="insights" id="insights">
+        <option value="Key KPI" selected>Key financial indicators</option>
+        <option value="All">Overall P&L insights</option>
+        <option value="Income">Income insights</option>
+        <option value="Cost of Sales">Cost of sales insights</option>
+        <option value="Expenses">Expenses insights</option>
+        <option value="Other Income(Loss)">Other income insights</option>
+        <option value="Other Expenses">Other expenses insights</option>
+      </select>
 
-<div>
-{% if error %}
-    <p class="error">{{ error }}</p>
-{% endif %}
-</div>
+      <button type="submit" id="uploadButton">Upload</button>
+    </form>
 
-<script>
-/*
-  document.getElementById('uploadButton').addEventListener('click', function(event) {
-    // Prevent the form from being submitted
-    //event.preventDefault();
-
-    // Update the output box
-    document.getElementById('outputMessage').textContent = 'Please wait while we get your insights...';
-
-    // Your upload logic here...
-});
-*/
-
-/*
-  document.getElementById('uploadButton').addEventListener('click', function(event) {
-  // Prevent the form from being submitted immediately
-  event.preventDefault();
-
-  // Update the output box
-  document.getElementById('outputMessage').textContent = 'Please wait while we process your request...';
-
-  // Disable the upload button
-  document.getElementById('uploadButton').disabled = true;
-
-  // Submit the form programmatically
-  //document.getElementById('yourFormId').submit();
-  // Submit the form programmatically after a slight delay
-  setTimeout(function() {
-  document.getElementById('yourFormId').submit();
-  },  100); // Adjust the delay as needed
-*/
-</script>
-
-
+    <div class="output-box">
+      {% if message %}
+        <p id="outputMessage">{{ message|safe }}</p>
+      {% else %}
+        <p id="outputMessage"></p>
+      {% endif %}
+    </div>
+  </div>
 </body>
 </html>

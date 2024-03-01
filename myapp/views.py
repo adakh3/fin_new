@@ -26,9 +26,16 @@ def upload_file_view(request):
         form = UploadFileForm()
     return render(request, 'myapp/upload.html', {'form': form})
 
-
 def handle_file(f, request):
 #if the file is an excel file, then we upload it and start, else send an error message
+    
+    print('Handle file called')
+    
+        # Check the file extension
+    _, ext = os.path.splitext(f.name)
+    if ext not in ['.xls', '.xlsx']:
+        print('Not an excel file. Please upload an excel file')
+        return render(request, 'myapp/upload.html', {'error': 'Invalid file type. Please upload an excel file'})
 
     try:
         # Try to read the file with pandas
@@ -39,12 +46,8 @@ def handle_file(f, request):
         print('Invalid file type. Please upload an excel file')
         return render(request, 'myapp/upload.html', {'error': 'Invalid file type. Please upload an excel file'})
 
-
     '''except Exception as e:
         raise ValueError("The provided file is not a valid Excel file.") from e'''
-
-
-    
 
     if not os.path.exists('uploaded_files'):
         os.makedirs('uploaded_files')
@@ -52,15 +55,14 @@ def handle_file(f, request):
     with open('uploaded_files/' + f.name, 'wb+') as destination:
         for chunk in f.chunks():
             destination.write(chunk)
-        
-    
     #now we can load the data from the file and do some analysis
-    
     #initialise the object
     my_object = HandleUploadedFile(f.name)
-    
     #call the main method
-    return my_object.main()
+    print('This is what the user selected:', request.POST['insights'])
+    return my_object.main(request.POST['insights'])
+
+
 
 
 
