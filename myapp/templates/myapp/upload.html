@@ -51,7 +51,9 @@
       cursor: pointer; /* Add a pointer cursor on mouse-over */
     }
 
-
+    label, .form-control {
+      margin-bottom: 0;  /* Remove bottom margin */
+    }
 
     .error {
       color: red;
@@ -62,7 +64,7 @@
 <body>
   <div class="container">
     <h2>Relogue AI - Profit & Loss Analyser</h2>
-    <h4>Instant, In-depth Insights from Your QuickBooks P&L using our best in class AI</h4>
+    <h4>Instant, In-depth Insights from Your QuickBooks P&L using best in class AI</h4>
     <p>Simply export your QuickBooks 'Profit and Loss Comparison Report', including 'value' and 'percentage' changes, into an .xlsx file and upload.</p>
 
     {% if error %}
@@ -75,14 +77,72 @@
 
       <label for="insights">What would you like to analyse?</label>
       <select name="insights" id="insights">
-        <option value="Key KPI" selected>Key financial indicators</option>
-        <option value="All">Overall P&L insights</option>
+        <option value="Key KPI" selected>Key P&L indicators</option>
+        <!--<option value="All">Overall P&L insights</option>-->
         <option value="Income">Income insights</option>
         <option value="Cost of Sales">Cost of sales insights</option>
         <option value="Expenses">Expenses insights</option>
         <option value="Other Income(Loss)">Other income insights</option>
         <option value="Other Expenses">Other expenses insights</option>
       </select>
+
+      <p> </p>
+      <label for="industry">Pick a relevant industry for more helpful insights</label>
+      <select name="industry" id="industry-dropdown">
+        <option value="all" selected>Prefer not to say</option>
+        <option value="agriculture">Agriculture</option>
+        <option value="artisanal_foods">Artisanal Foods</option>
+        <option value="arts_crafts">Arts & Crafts</option>
+        <option value="automotive_services">Automotive Services</option>
+        <option value="beauty_care">Beauty Care</option>
+        <option value="cafes">Cafes</option>
+        <option value="catering">Catering</option>
+        <option value="childcare">Childcare</option>
+        <option value="cleaning_services">Cleaning Services</option>
+        <option value="consulting">Consulting</option>
+        <option value="design_services">Design Services</option>
+        <option value="education">Education</option>
+        <option value="entertainment">Entertainment</option>
+        <option value="event_planning">Event Planning</option>
+        <option value="fashion_retail">Fashion Retail</option>
+        <option value="financial_services">Financial Services</option>
+        <option value="fitness_wellness">Fitness & Wellness</option>
+        <option value="florists">Florists</option>
+        <option value="food_trucks">Food Trucks</option>
+        <option value="gardening">Gardening</option>
+        <option value="grocery_stores">Grocery Stores</option>
+        <option value="handyman_services">Handyman Services</option>
+        <option value="healthcare_clinics">Healthcare Clinics</option>
+        <option value="home_decor">Home Decor</option>
+        <option value="hospitality">Hospitality</option>
+        <option value="it_services">IT Services</option>
+        <option value="jewelry">Jewelry</option>
+        <option value="landscaping">Landscaping</option>
+        <option value="laundry_services">Laundry Services</option>
+        <option value="legal_services">Legal Services</option>
+        <option value="manufacturing">Manufacturing</option>
+        <option value="marketing_advertising">Marketing & Advertising</option>
+        <option value="massage_therapy">Massage Therapy</option>
+        <option value="music_entertainment">Music & Entertainment</option>
+        <option value="pet_services">Pet Services</option>
+        <option value="photography">Photography</option>
+        <option value="plumbing">Plumbing</option>
+        <option value="real_estate">Real Estate</option>
+        <option value="restaurants">Restaurants</option>
+        <option value="salons">Salons</option>
+        <option value="software_development">Software Development</option>
+        <option value="sports_recreation">Sports & Recreation</option>
+        <option value="tailoring">Tailoring</option>
+        <option value="tech_repair">Tech Repair</option>
+        <option value="transportation">Transportation</option>
+        <option value="travel_agencies">Travel Agencies</option>
+        <option value="tutoring_services">Tutoring Services</option>
+        <option value="veterinary_services">Veterinary Services</option>
+        <option value="web_design">Web Design</option>
+        <option value="wedding_services">Wedding Services</option>
+        <option value="yoga_studios">Yoga Studios</option>
+    </select>
+    
 
       <button type="submit" id="uploadButton">Upload</button>
     </form>

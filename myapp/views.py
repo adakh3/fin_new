@@ -60,7 +60,11 @@ def handle_file(f, request):
     my_object = HandleUploadedFile(f.name)
     #call the main method
     print('This is what the user selected:', request.POST['insights'])
-    return my_object.main(request.POST['insights'])
+    print('The industry is:', request.POST['industry'])
+
+
+
+    return my_object.main(request.POST['insights'], request.POST['industry'])
 
 
 

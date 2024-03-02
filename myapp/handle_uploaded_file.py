@@ -186,7 +186,7 @@ class HandleUploadedFile:
 
     #analyse the data starting with revenues, gross proits, net profits and other KPIs, and then details 
     #send to AI for human language interpretation
-    def send_to_AI(self, data, prompt_file_path):
+    def send_to_AI(self, data, prompt_file_path, industry):
         #prompt2 gves much worse results - so I think my original prompt is better
         with open(prompt_file_path, 'r') as file: 
             prompt = file.read()
@@ -195,13 +195,13 @@ class HandleUploadedFile:
         model = "gpt-4-turbo-preview",#"gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": prompt},
-            {"role": "user", "content": f"Here is a CSV dataset:\n{csv_text}\nNow, perform some analysis on this data.",}
+            {"role": "user", "content": f"Here is a CSV dataset:\n{csv_text}\nNow, perform some analysis on this data. This is from {industry} industry for more context",}
             ]
         )
         return completion.choices[0].message.content
 
 
-    def main(self, insights_preference):        
+    def main(self, insights_preference, industry):        
         #calling all the functions now 
         i = self.find_data_start() 
         data = self.clean_data(self.load_data_table(i))
@@ -257,7 +257,7 @@ class HandleUploadedFile:
             prompt_file_path = 'resources/prompt_category.txt'
 
         aiResponse = None
-        aiResponse = self.send_to_AI(data, prompt_file_path)
+        aiResponse = self.send_to_AI(data, prompt_file_path, industry)
         print('Data returned from AI ' + str(datetime.now().time()))
         
         #now similarly get analysis on income accounts only

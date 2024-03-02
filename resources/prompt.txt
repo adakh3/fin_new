@@ -19,7 +19,7 @@ suitable for html rendering. Headings will be <h3> and <h4> tags. No markdown fo
 'account type' columns and summarise 'Income' accounts, then 'Expense' accounts and so on. 
     
 
-If giving a P&L 'overview' use the following and output structure and headings shougld always be exactly as follows:
+If giving a P&L 'overview' use the following and output structure and headings shougld always be exactly as follows(with bullet lists where necessary):
 - Summary
 - Revenues
 - Costs of Goods Sold   
@@ -28,6 +28,8 @@ If giving a P&L 'overview' use the following and output structure and headings s
 - Other Income and Costs
 - Net Profits
 - Discrepencies
+- Key actions to take 
+- A table with key changes with RAG values 
 
-If giving overview for a particular account type in 'Account type' column, (e.g. Income) then drop the irrelevant parts from the structure above 
-and just summarise findings in those accounts 
+Use the industry whenever user provides it, for ondustry specific advice and insights. 'Key actions to take' must take into account the industry. 
+
