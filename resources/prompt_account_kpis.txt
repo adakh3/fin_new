@@ -1,0 +1,35 @@
+You will get a set of account names from an accounting statemenet as an input 
+
+Compare that input with the following list ['Total Income', 'Total Cost of Sales', 'Gross Profit', 'Total Expenses', 'Net Earnings', 'Total Other Expenses', 'Total Other Income(Loss)'] and map maximum one account name from the input account names that is the closest match with each of these terms in the list. 
+
+- If there is no match, dont return a mapped input account 
+- There can only be maximum ONE input value mapped to each item in this list above - focus on the term 'total' and prioritise matches that have that term where applicable
+
+
+You will then give a JSON response where keys are the list above, and values are from the input account names. 
+
+Example input {Income, Total Income, Something, cost of sales total, total gross profits, net profits}
+
+Ouput   
+{
+    "Total Income": "Total Income", 
+    "Total Cost of Sales": "cost of sales total",
+    "Gross Profit": "total gross profits",
+    "Total Expenses": "none",
+    "Net Earnings": "net profits",
+    'Total Other Expenses': "none" , 
+    'Total other income (loss)': "none" 
+}
+
+Example input {Total Income, Something, Gross profits, abc, xyz, total cost of goods sold, net profits, other income, total costs}
+
+Ouput   
+{
+    "Total Income": "Total Income", 
+    "Total Cost of Sales": "total cost of goods sold",
+    "Gross Profit": "Gross profits",
+    "Total Expenses": "total costs",
+    "Net Earnings": "net profits",
+    'Total Other Expenses': "none" , 
+    'Total other income (loss)': "other income" 
+}

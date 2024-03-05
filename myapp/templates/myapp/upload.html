@@ -58,12 +58,23 @@
     .error {
       color: red;
     }
+
+    .beta-tag {
+    background-color: #f0ad4e;
+    color: white;
+    border-radius: 2px;
+    font-size: 0.6em;
+    padding: 2px 4px;
+    vertical-align: middle;
+}
+
+    
   </style>
 </head>
 
 <body>
   <div class="container">
-    <h2>Relogue AI - Profit & Loss Analyser</h2>
+    <h2>Relogue AI - Profit & Loss Analyser <span class="beta-tag">Beta</span> </h2>
     <h4>Instant, In-depth Insights from Your QuickBooks P&L using best in class AI</h4>
     <p>Simply export your QuickBooks 'Profit and Loss Comparison Report', including 'value' and 'percentage' changes, into an .xlsx file and upload.</p>
 
@@ -77,7 +88,7 @@
 
       <label for="insights">What would you like to analyse?</label>
       <select name="insights" id="insights">
-        <option value="Key KPI" selected>Key P&L indicators</option>
+        <option value="Key KPI" selected>P&L high level insights</option>
         <!--<option value="All">Overall P&L insights</option>-->
         <option value="Income">Income insights</option>
         <option value="Cost of Sales">Cost of sales insights</option>

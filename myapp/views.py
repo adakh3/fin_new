@@ -2,7 +2,7 @@
 from django.shortcuts import render
 from .forms import UploadFileForm
 import os
-from .handle_uploaded_file import HandleUploadedFile
+from .handle_pl_data import HandlePLData
 from django.http import JsonResponse
 import pandas as pd
 
@@ -11,7 +11,6 @@ import pandas as pd
 
 def upload_file_view(request):
     #by default this should show the html file in my templates folder called upload.html
-
     if request.method == 'POST':
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
@@ -19,9 +18,6 @@ def upload_file_view(request):
             print('Form submitted')
             #print (response)
             return render(request, 'myapp/upload.html', {'form': form, 'message': response})
-            
-            
-            #return redirect('success_url')  # replace with your success url
     else:
         form = UploadFileForm()
     return render(request, 'myapp/upload.html', {'form': form})
@@ -57,14 +53,19 @@ def handle_file(f, request):
             destination.write(chunk)
     #now we can load the data from the file and do some analysis
     #initialise the object
-    my_object = HandleUploadedFile(f.name)
+    my_object = HandlePLData(f.name)
     #call the main method
     print('This is what the user selected:', request.POST['insights'])
     print('The industry is:', request.POST['industry'])
 
+    results = my_object.main(request.POST['insights'], request.POST['industry'])
 
+    if(results is None):
+        return 'File does not contain valid data. Try opening your file in excel, saving it and then uploading it again.'
 
-    return my_object.main(request.POST['insights'], request.POST['industry'])
+    else:
+        return my_object.main(request.POST['insights'], request.POST['industry'])
+
 
 
 
