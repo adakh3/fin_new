@@ -7,7 +7,6 @@ import openai
 from datetime import datetime
 from openai import OpenAI
 import string
-import tiktoken
 import json
 from typing import List, Dict
 
@@ -21,6 +20,8 @@ class HandlePLData:
     client = OpenAI()
     openai.api_key = os.getenv('OPENAI_API_KEY')
     dateColumnCount = 0
+    total_sales = []
+    original_columns = []
 
     def __init__(self, filename):
         self.filepath = 'uploaded_files/' + filename
@@ -58,7 +59,6 @@ class HandlePLData:
         if start_row is not None:
             data = pd.read_excel(self.filepath, skiprows=range(start_row+1))
             #data = data.iloc[start_row:]
-            print('end of load data table', data.head())
             print('columns are', data.columns.tolist())
 
         else:
@@ -78,12 +78,15 @@ class HandlePLData:
 
         # Remove rows and columns with all NaNs
         data = self.remove_nan_values(data)
+    
 
         # Validate and rename columns
         data = self.validate_and_rename_columns(data)
+        print('Data validated and renamed ' + str(datetime.now().time()))
 
         # Clean the 'Accounts' column
         data = self.clean_accounts_column(data)
+        print('Accounts column cleaned ' + str(datetime.now().time()))
 
 
         # Get dictionary of date columns
@@ -91,25 +94,20 @@ class HandlePLData:
         self.dateColumnCount = len(date_columns_dict)
         if self.dateColumnCount == 0:
             raise Exception("File does not contain any valid accounting periods. Please upload a file with valid P&L data.")
+        
 
         # Get indices of columns with True values (date columns)
         indices = self.get_true_indices(date_columns_dict)
-
-        # Get all account names from the data
-        account_names = self.get_account_names(data)
-
-
 
         # Select and clean specific columns
         data = self.select_baseline_columns(data, indices)
         if(data is None):
             return None
+        
+        print('Baseline columns selected and cleaned ' + str(datetime.now().time()))
 
         # Store original column names
-        original_columns = data.columns.tolist()
-
-        data = self.add_differences(data, original_columns)
-        #data = self.add_percent_sales_differences(data, original_columns)
+        self.original_columns = data.columns.tolist()
 
         return data
 
@@ -158,6 +156,12 @@ class HandlePLData:
         data_mask = data.iloc[:, 0].isin(matched_accounts)
 
         return data_mask
+    
+    def save_total_sales(self, data):
+
+        total_sales_row = data[data['Account type'] == 'Key KPI'].iloc[0]
+        total_sales = total_sales_row.iloc[1:].tolist()
+        return total_sales
 
 
     def get_true_indices(self, date_columns_dict: Dict[str, bool]) -> List[int]:
@@ -186,6 +190,14 @@ class HandlePLData:
 
     #separate out what we need from the data, by account type 
     #''''Income', 'Cost of Sales', 'Expenses', 'Other Income(Loss)','Other Expenses', 'Key KPI', 'All')'''
+    def select_data(self, data, account_types):
+        if account_types == 'All':
+            return data
+        else:
+            data = data[data['Account type'].isin(account_types)]
+        return data
+        
+    '''
     def select_data(self, data, account_type):
 
         if account_type == 'All':
@@ -194,27 +206,31 @@ class HandlePLData:
             data = data[data['Account type'] == account_type]
 
         return data
-    
-    def add_percent_sales(self, data: pd.DataFrame, original_columns: List[str]) -> pd.DataFrame:
+    '''
+
+    def add_percent_sales(self, data: pd.DataFrame) -> pd.DataFrame:
         """
         Adds a '% of Sales' column for each non-NaN column in the original data.
         """
-        for col in original_columns[1:]:
+        i = 0
+        for col in self.original_columns[1:]:
             if not data[col].isna().all():
-                data[f'% of Sales {col}'] = data[col] / data[col].sum()
+                data[f'% of Sales {col}'] = data[col] / self.total_sales[i]
+                i += 1
         return data
 
-    def add_differences(self, data: pd.DataFrame, original_columns: List[str]) -> pd.DataFrame:
+    def add_differences(self, data: pd.DataFrame) -> pd.DataFrame:
         """
         Adds a 'Difference' column for each non-NaN column in the original data, starting from the second non-NaN column.
         """
-        date_columns = [col for col in original_columns[1:] if not data[col].isna().all()]
+        date_columns = [col for col in self.original_columns[1:] if not data[col].isna().all()]
 
         for i in range(0, len(date_columns)-1):
             data[f'Difference {date_columns[i]}'] = data[date_columns[i]] - data[date_columns[i+1]]
         return data
 
-    
+    '''
+    #do not use this function at the moment 
     def add_percent_sales_differences(self, data: pd.DataFrame, original_columns: List[str]) -> pd.DataFrame:
         """
         Adds a '% Sales Difference' column for each non-NaN column in the original data, starting from the second non-NaN column.
@@ -223,7 +239,7 @@ class HandlePLData:
         for i in range(0, len(non_nan_columns)-1):
             data[f'% Sales Difference {non_nan_columns[i]}'] = (data[non_nan_columns[i]] - data[non_nan_columns[i+1]]) / data[non_nan_columns[i+1]]
         return data
-
+        '''
 
         #from data mark all the accounts that are income accounts, where account type is the type of account
     def mark_account_types(self, data, accountType):
@@ -395,7 +411,7 @@ class HandlePLData:
         for index, row in enumerate(df_as_list):
             # Convert the row to a list of strings
             row_as_strings = [str(item) for item in row]
-            print(row_as_strings)
+            print('Headers rows found are:', row_as_strings)
             
             # Count the number of headers found in the row
             matches = sum(header in row_as_strings for header in headers_list)
@@ -419,13 +435,6 @@ class HandlePLData:
         
         df = pd.read_excel(self.filepath)
         
-        #maybe get rid of this for th time being and see how it goes 
-        '''
-        df = df.dropna(how='all')
-        df.to_excel(self.filepath, index=False)
-        df = pd.read_excel(self.filepath)
-        '''
-        
         #calling all the functions now 
         i = self.find_data_start(df) 
         if (i is None):
@@ -433,9 +442,13 @@ class HandlePLData:
 
         data = self.load_data_table(i)
 
+        print('Data loaded ' + str(datetime.now().time()))
+
         data = self.clean_and_prepare_data(data)        
         if data is None:
             raise Exception ('File does not contain valid data. Try opening your file in excel, saving it and then uploading it again.')
+        
+        print('Data cleaned and prepared ' + str(datetime.now().time()))
         
         #todo: refactor this 
         data = self.mark_account_types(data, 'Income')
@@ -445,35 +458,43 @@ class HandlePLData:
         data = self.mark_account_types(data, 'Other Expenses')
         data = self.mark_key_kpis(data)
 
-        savedFilename = 'uploaded_files/cleaned_' + self.filename
+        print('Data marked ' + str(datetime.now().time()))
+
+        self.total_sales = self.save_total_sales(data)
+
+        print('Total sales saved ' + str(datetime.now().time()))
+        print('Total sales are', self.total_sales)
+
+        #todo: Maybe remove this - or add emphasis in the prompt
+        data = self.add_differences(data)
+        print('Differences added ' + str(datetime.now().time()))
+        
+        data = self.add_percent_sales(data)
+        print('Percent sales differences added ' + str(datetime.now().time()))
  
         #select the data to send to AI based on user input 
         if(insights_preference == 'Income'):
-            data = self.select_data(data, 'Income')
+            data = self.select_data(data, ['Income'])
         elif(insights_preference == 'Cost of Sales'):
-            data = self.select_data(data, 'Cost of Sales')
+            data = self.select_data(data, ['Cost of Sales'])
         elif(insights_preference == 'Expenses'):
-            data = self.select_data(data, 'Expenses')
+            data = self.select_data(data, ['Expenses'])
         elif(insights_preference == 'Other Income(Loss)'):
-            data = self.select_data(data, 'Other Income(Loss)')
+            data = self.select_data(data, ['Other Income(Loss)'])
         elif(insights_preference == 'Other Expenses'):
-            data = self.select_data(data, 'Other Expenses')
+            data = self.select_data(data, ['Other Expenses'])
         elif(insights_preference == 'Key KPI'):
-            data = self.select_data(data, 'Key KPI')
+            data = self.select_data(data, ['Key KPI'])
         else:
             data = self.select_data(data, 'All')
 
         print('Number of rows in data: ', len(data))
         print('Number of columns in data: ', len(data.columns))
-        print('Data being sent to AI for analysis and interpretation ' + str(datetime.now().time()))
-        
+
+        savedFilename = 'uploaded_files/cleaned_' + self.filename
         #save the data being sent as a new file for refernce
         data.to_excel(savedFilename, index=False)
 
-        if(insights_preference == 'All' or insights_preference == 'Key KPI'):
-            prompt_file_path = 'resources/prompt.txt'
-        else:
-            prompt_file_path = 'resources/pl_category_prompt.txt'
 
         #choose your prompt based on number of data columns 
         if(insights_preference == 'All' or insights_preference == 'Key KPI'):
@@ -483,9 +504,14 @@ class HandlePLData:
                 prompt_file_path = 'resources/pl_simple_prompt.txt'
             else:
                 prompt_file_path = 'resources/pl_comparison_prompt.txt'
+        else:
+            prompt_file_path = 'resources/pl_category_prompt.txt'
+
+        print('Data being sent to AI for analysis and interpretation ' + str(datetime.now().time()))
 
         aiResponse = None
         aiResponse = self.get_AI_analysis(data, prompt_file_path, industry)
+
         print('Data returned from AI ' + str(datetime.now().time()))
         
     
