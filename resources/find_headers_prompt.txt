@@ -1,0 +1,18 @@
+You will receive top 20 rows of an accounting statment 
+        
+I want you to return the contents of the header row for the actual data
+accounting in the file, as JSON. It would mostly have two to three columns at least.
+
+This should be the row that contains headers like Accounts, Date 1, Period 1, June 2020 etc. 
+
+Example: Input is data with some empty rows, some semi filled rows, and then 
+a row with string values like accounts, Jan 22, percentage change, difference
+
+Make sure you only return data from one and only one row. Do not use more than one row for the response. Pick the most appropriate row and use just that. 
+
+Response should be contents of this row. Ignore any 'unnamed columns'...
+response should be like 
+
+{
+"headers": ["Accounts", "Jul 2023 - Jan 2024", "Jul 2022 - Jan 2023 (PP)", "Change", "% Change"],
+}

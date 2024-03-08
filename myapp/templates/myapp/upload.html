@@ -78,10 +78,6 @@
     <h4>Instant, In-depth Insights from your P&L using best in class AI</h4>
     <p>Simply upload a Profit and Loss Statement (in .xlsx format) for a single period, comparison with a previous period, or over several months.</p>
 
-    {% if error %}
-      <p class="error">{{ error }}</p>
-    {% endif %}
-
     <form id='yourFormId' method="post" enctype="multipart/form-data">
       {% csrf_token %}
       {{ form.as_p }}
@@ -154,9 +150,12 @@
         <option value="yoga_studios">Yoga Studios</option>
     </select>
     
-
       <button type="submit" id="uploadButton">Upload</button>
     </form>
+
+    {% if error %}
+    <p class="error">{{ error }}</p>
+    {% endif %}
 
     <div class="output-box">
       {% if message %}

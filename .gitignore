@@ -9,3 +9,4 @@
 # Virtual environment
 venv/
 launch.json
+__pycache__/ 

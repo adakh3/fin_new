@@ -11,14 +11,10 @@ import tiktoken
 import json
 from typing import List, Dict
 
-
-
 ''' Overall separate out key KPIs, revenues, COGS, costs, other income and costs --- 
 one by one send these all to GPT-4 to get insights and predictions 
 then get a summary of all the insights and predictions
 '''
-
-
 
 class HandlePLData:
 
@@ -31,111 +27,53 @@ class HandlePLData:
         self.filename = filename
 
     #load the data from an excel file 
-    def find_data_start(self):
+    def find_data_start(self, data):
 
-        data = pd.read_excel(self.filepath)
+        headers = self.data_headers_from_ai ('resources/find_headers_prompt.txt')
 
+        row_number = self.get_file_header_row (headers)
+
+        return row_number
+
+        '''
+        #data = pd.read_excel(self.filepath)
+        print ('find data start', data)
+
+
+        #data = data.reset_index(drop=True)
         for i, row in data.iterrows():
+            print('row data', data.iloc[i])
             if not row.isnull().any():
                 if i == 0:
                     return i
                 else:
                     return i -1
         return None
+        '''
 
     #load the data from an excel file
     def load_data_table(self, start_row):
 
-        data = pd.DataFrame()
+        #data = pd.read_excel(self.filepath)
         if start_row is not None:
-            start_row = self.find_data_start()
-            if start_row is not None:
-                data = pd.read_excel(self.filepath, skiprows=range(start_row))
-            else:
-                data = pd.DataFrame()
+            data = pd.read_excel(self.filepath, skiprows=range(start_row+1))
+            #data = data.iloc[start_row:]
+            print('end of load data table', data.head())
+            print('columns are', data.columns.tolist())
 
-        if len(data.columns) < 1:
-            raise Exception("File does not contain any data. Please upload a file with data.")
+        else:
+            data = None
+
+        if len(data.shape) < 1:
+            raise Exception("File does not contain data. Please upload a file with valid P&L data.")
             
         
         return data
-
-
-    '''
-    # clean the data 
-    def clean_data(self, data):
-
-        # remove rows with all NaNs
-        data = data.dropna(axis=0, how='all')
-        # remove columns with all NaNs
-        data = data.dropna(axis=1, how='all')
-
-        #rename some of the columns
-        #expected_columns = ['Accounts', 'Period 2 values', 'Period 1 values', 'Change in values', 'Percentage change']
-
-        #todo: refactor this, its based on the idea of 4 exact columns, but it should be more flexible - this depends on QB data
-        if len(data.columns) < 2:
-            print('Data does not contain enough columns')
-            raise Exception("File does not contain valid data. Please upload a file with data.")
-
-        #check for the column with accounts and rename it to 'Accounts', at the momenbt assuming its the first column
-        if data.columns[0] != 'Accounts':
-            data.rename(columns={data.columns[0]: 'Accounts'}, inplace=True)
-
-        #Next find the date columns using self.map_date_columns and delete the rest of the columns
-        column_names = [str(col) for col in data.columns] 
-        column_names_str = ', '.join(column_names)
-        date_columns = self.map_date_columns(column_names_str, 'resources/prompt_columns_bool.txt')
-        print ('Date columns:', date_columns)
-        date_columns_dict =  json.loads(date_columns)
-
-        # Get the keys in the dictionary as a list
-        keys = list(date_columns_dict.keys())
-        # Initialize an empty list to store the indices
-        indices = []
-
-        # Iterate over the items in the dictionary
-        for key, value in date_columns_dict.items():
-            # If the value is True, add the index of the key to the list
-            if value:
-                indices.append(keys.index(key))
-        print('Indexes where value is true:', indices)
-
-        # Select specific columns
-        print('Before columns to check')
-        columns_to_check = data.iloc[:, indices]
-        print('After columns to check')
-        df_periods = columns_to_check
-        print('After df_periods')
-
-        # Remove leading digits from the 'Accounts' column
-        data['Accounts'] = data['Accounts'].apply(lambda x: str(x).lstrip().lstrip(string.digits))
-        print('before checking null columns')
-
-        # Check if all values are zero or NaN
-        if (df_periods.isna() | (df_periods == 0)).all().all():
-            return None
-
-        print('after checking null columns')
-        # check if there are columns with account names - if not, throw an error 
-
-        #remove all columns that are not date columns or the column 0
-        data_mask = data.iloc[:, [0] + indices]
-        data = data[data_mask.columns]  # Remove columns not in data_mask
-
-        return data
-        '''
     
 
     def clean_and_prepare_data(self, data: pd.DataFrame) -> pd.DataFrame:
         """
         Cleans the input data by removing NaN values, renaming columns, and selecting specific columns.
-
-        Parameters:
-        data (DataFrame): The input data to be cleaned.
-
-        Returns:
-        DataFrame: The cleaned data.
         """
 
         # Remove rows and columns with all NaNs
@@ -147,15 +85,19 @@ class HandlePLData:
         # Clean the 'Accounts' column
         data = self.clean_accounts_column(data)
 
+
         # Get dictionary of date columns
         date_columns_dict = self.get_date_columns_dict(data)
         self.dateColumnCount = len(date_columns_dict)
+        if self.dateColumnCount == 0:
+            raise Exception("File does not contain any valid accounting periods. Please upload a file with valid P&L data.")
 
         # Get indices of columns with True values (date columns)
         indices = self.get_true_indices(date_columns_dict)
 
         # Get all account names from the data
         account_names = self.get_account_names(data)
+
 
 
         # Select and clean specific columns
@@ -166,53 +108,33 @@ class HandlePLData:
         # Store original column names
         original_columns = data.columns.tolist()
 
-
-        # Add more columns
-        data = self.add_percent_sales(data, original_columns)
-        #data = self.add_differences(data, original_columns)
+        data = self.add_differences(data, original_columns)
         #data = self.add_percent_sales_differences(data, original_columns)
 
         return data
 
+
     def remove_nan_values(self, data: pd.DataFrame) -> pd.DataFrame:
         """
         Removes rows and columns with all NaN values from the data.
-
-        Parameters:
-        data (DataFrame): The input data.
-
-        Returns:
-        DataFrame: The data with NaN rows and columns removed.
         """
         data = data.dropna(axis=0, how='all')
         data = data.dropna(axis=1, how='all')
         return data
 
+
     def validate_and_rename_columns(self, data: pd.DataFrame) -> pd.DataFrame:
         """
         Validates the data has at least 2 columns and renames the first column to 'Accounts' if necessary.
-
-        Parameters:
-        data (DataFrame): The input data.
-
-        Returns:
-        DataFrame: The data with validated and renamed columns.
         """
-        if len(data.columns) < 2:
-            raise Exception("File does not contain valid data. Please upload a file with data.")
         if data.columns[0] != 'Accounts':
             data.rename(columns={data.columns[0]: 'Accounts'}, inplace=True)
         return data
 
+
     def get_date_columns_dict(self, data: pd.DataFrame) -> Dict[str, bool]:
         """
         Gets a dictionary of date columns from the data. True for date columns and False for non-date columns.
-
-        Parameters:
-        data (DataFrame): The input data.
-
-        Returns:
-        Dict[str, bool]: A dictionary of date columns.
         """
         column_names = [str(col) for col in data.columns] 
         column_names_str = ', '.join(column_names)
@@ -223,12 +145,6 @@ class HandlePLData:
     def get_KPI_rows(self, data: pd.DataFrame) -> pd.Series:
         """
         Gets a DataFrame of rows that match key KPIs.
-
-        Parameters:
-        data (DataFrame): The input data.
-
-        Returns:
-        pd.DataFrame: A DataFrame of rows that match key KPIs.
         """
         account_names = [str(name) for name in data.iloc[:, 0]]
         account_names_str = ', '.join(account_names)
@@ -247,12 +163,6 @@ class HandlePLData:
     def get_true_indices(self, date_columns_dict: Dict[str, bool]) -> List[int]:
         """
         Gets the indices of columns with True values in the date columns dictionary.
-
-        Parameters:
-        date_columns_dict (Dict[str, bool]): The date columns dictionary.
-
-        Returns:
-        List[int]: A list of indices.
         """
         keys = list(date_columns_dict.keys())
         return [keys.index(key) for key, value in date_columns_dict.items() if value]
@@ -260,13 +170,6 @@ class HandlePLData:
     def select_baseline_columns(self, data: pd.DataFrame, indices: List[int]) -> pd.DataFrame:
         """
         Selects specific columns from the data based on the indices and cleans the 'Accounts' column.
-
-        Parameters:
-        data (DataFrame): The input data.
-        indices (List[int]): The indices of the columns to select.
-
-        Returns:
-        DataFrame: The data with selected and cleaned columns.
         """
         dataDates = data.iloc[:, indices]
 
@@ -295,13 +198,6 @@ class HandlePLData:
     def add_percent_sales(self, data: pd.DataFrame, original_columns: List[str]) -> pd.DataFrame:
         """
         Adds a '% of Sales' column for each non-NaN column in the original data.
-
-        Parameters:
-        data (pd.DataFrame): The input data.
-        original_columns (List[str]): The original column names.
-
-        Returns:
-        pd.DataFrame: The data with added '% of Sales' columns.
         """
         for col in original_columns[1:]:
             if not data[col].isna().all():
@@ -311,13 +207,6 @@ class HandlePLData:
     def add_differences(self, data: pd.DataFrame, original_columns: List[str]) -> pd.DataFrame:
         """
         Adds a 'Difference' column for each non-NaN column in the original data, starting from the second non-NaN column.
-
-        Parameters:
-        data (pd.DataFrame): The input data.
-        original_columns (List[str]): The original column names.
-
-        Returns:
-        pd.DataFrame: The data with added 'Difference' columns.
         """
         date_columns = [col for col in original_columns[1:] if not data[col].isna().all()]
 
@@ -329,40 +218,11 @@ class HandlePLData:
     def add_percent_sales_differences(self, data: pd.DataFrame, original_columns: List[str]) -> pd.DataFrame:
         """
         Adds a '% Sales Difference' column for each non-NaN column in the original data, starting from the second non-NaN column.
-
-        Parameters:
-        data (pd.DataFrame): The input data.
-        original_columns (List[str]): The original column names.
-
-        Returns:
-        pd.DataFrame: The data with added '% Sales Difference' columns.
         """
         non_nan_columns = [col for col in original_columns[1:] if not data[col].isna().all()]
         for i in range(0, len(non_nan_columns)-1):
             data[f'% Sales Difference {non_nan_columns[i]}'] = (data[non_nan_columns[i]] - data[non_nan_columns[i+1]]) / data[non_nan_columns[i+1]]
         return data
-    
-    '''
-    def add_more_columns(self, data):
-    # add more columns to the data
-
-        if data is not None:
-
-            total_income_period_1 = data.loc[data.iloc[:, 0] == 'Total Income', data.columns[1]].values[0]
-
-            try:
-                data['Percentage of sales period 1'] = data.iloc[:, 1] / total_income_period_1 * 100
-            except:
-                print ('Division by zero error')
-                data ['Percentage of sales period 1'] = 0
-
-            total_income_period_2 = data.loc[data.iloc[:, 0] == 'Total Income', data.columns[2]].values[0]
-            data['Percentage of sales period 2'] = data.iloc[:, 2] / total_income_period_2 * 100
-
-            data['Change in percentage of sales'] = data['Percentage of sales period 2'] - data['Percentage of sales period 1'] 
-
-        return data
-        '''
 
 
         #from data mark all the accounts that are income accounts, where account type is the type of account
@@ -405,17 +265,7 @@ class HandlePLData:
     def mark_key_kpis(self, data: pd.DataFrame) -> pd.DataFrame:
         """
         Marks the Key KPIs in the data by comparing the first column of accounts against a predefined list.
-        
-        Args:
-            data (pd.DataFrame): The input data containing the accounts.
-            
-        Returns:
-            pd.DataFrame: The data with the Key KPIs marked.
         """
-        #rather than creating a mask, send first column of accounts to AI to compare against this list        
-        # Create a boolean mask
-        #mask = data.iloc[:, 0].isin(titles_to_keep)
-
         kpiMask = self.get_KPI_rows(data)
         
         # Index the DataFrame with the mask
@@ -451,8 +301,18 @@ class HandlePLData:
         first_column = data.iloc[:, 0]
         # Filter rows where the first column contains some strings
         rows_with_strings = data[first_column.str.contains(r'\S')]
-        return rows_with_strings
 
+        # Define the account names to look for
+        account_names = ['revenue', 'sales', 'income', 'gross profit', 'net income', 'net revenue', 'expenses', 'cost of sales', 'cost of goods sold', 'other income', 'other expenses']
+
+        # Check if any of the account names are substrings of the strings in the first column
+        #if not any(first_column.str.lower().str.contains(name) for name in account_names):
+        if not any(first_column.str.lower().str.contains(name).any() for name in account_names):
+            raise Exception('File does not seem to contain valid P&L data. Please upload a file with valid P&L data.')
+        
+
+
+        return rows_with_strings
 
     #sends columns to GPT 3.5 to map to a set of tags that I give it
     #returns a dictionary with indexes for accounts and date columns 
@@ -473,14 +333,110 @@ class HandlePLData:
         return completion.choices[0].message.content
         
 
-    def main(self, insights_preference, industry):        
+    def file_content_check(self):
+        # Read the file into a pandas DataFrame
+        df = pd.read_excel(self.filepath)
+
+        # Check if the file is emptyß
+        if df.empty:
+            raise Exception('File does not seem to contain any data. Try opening your file in excel, saving it and then uploading it again.')
+        
+        if len(df.shape) < 2:
+            raise Exception("File does not contain enough data. Please upload a file with valid P&L data.")
+
+
+        # Check if there are more than 12 date columns
+        if len(df.shape) > 15:
+            raise Exception('Please upload a file with a maximum of 12 periods for comaparison.')
+            
+        return True
+            
+    '''***** NEW FUNCTION ***** TO TEST ****  '''
+
+    def data_headers_from_ai(self, prompt_file_path):
+
+        # Read the first 10 rows from the excel file
+        df = pd.read_excel(self.filepath, nrows=10)
+
+        # Convert the dataframe to a JSON string
+        csv_data = df.to_csv(index=False)
+        
+        # Load the prompt file
+        with open(prompt_file_path, 'r') as file: 
+            prompt = file.read()
+        
+        # Send the JSON data to AI for column header matching
+        completion = openai.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": prompt},
+                {"role": "user", "content": csv_data}
+            ]
+        )
+        
+        # Get the response from AI
+        response = completion.choices[0].message.content
+        return response
+    
+    def get_file_header_row(self, column_names):
+
+        max_matches = 0
+        best_row = None
+
+        # Read the first 10 rows from the excel file
+        df = pd.read_excel(self.filepath, nrows=10)
+        df_as_list = df.head(10).values.tolist()
+   
+        # Convert the response JSON string to a dictionary
+        headers = json.loads(column_names)
+        # Extract the list of headers from the dictionary
+        headers_list = headers["headers"]
+
+        for index, row in enumerate(df_as_list):
+            # Convert the row to a list of strings
+            row_as_strings = [str(item) for item in row]
+            print(row_as_strings)
+            
+            # Count the number of headers found in the row
+            matches = sum(header in row_as_strings for header in headers_list)
+            
+            if matches > max_matches:
+                max_matches = matches
+                best_row = index
+
+        print('Row number in the file with the most matches is', best_row)
+
+        return best_row
+
+
+
+    def main(self, insights_preference, industry):
+
+        try:
+            self.file_content_check()   
+        except Exception as e:
+            raise ValueError(str(e)) from e
+        
+        df = pd.read_excel(self.filepath)
+        
+        #maybe get rid of this for th time being and see how it goes 
+        '''
+        df = df.dropna(how='all')
+        df.to_excel(self.filepath, index=False)
+        df = pd.read_excel(self.filepath)
+        '''
+        
         #calling all the functions now 
-        i = self.find_data_start() 
+        i = self.find_data_start(df) 
+        if (i is None):
+            raise Exception("File does not contain valid data. Please upload a file with valid P&L data.")
 
-        data = self.clean_and_prepare_data(self.load_data_table(i))        
+        data = self.load_data_table(i)
+
+        data = self.clean_and_prepare_data(data)        
         if data is None:
-            return None
-
+            raise Exception ('File does not contain valid data. Try opening your file in excel, saving it and then uploading it again.')
+        
         #todo: refactor this 
         data = self.mark_account_types(data, 'Income')
         data = self.mark_account_types(data, 'Cost of Sales')
@@ -489,9 +445,7 @@ class HandlePLData:
         data = self.mark_account_types(data, 'Other Expenses')
         data = self.mark_key_kpis(data)
 
-        savedFilename = 'uploaded_files/cleaned_data_all_accounts' + self.filename
-
-        #data = self.add_more_columns(data)
+        savedFilename = 'uploaded_files/cleaned_' + self.filename
  
         #select the data to send to AI based on user input 
         if(insights_preference == 'Income'):
@@ -515,37 +469,25 @@ class HandlePLData:
         
         #save the data being sent as a new file for refernce
         data.to_excel(savedFilename, index=False)
+
         if(insights_preference == 'All' or insights_preference == 'Key KPI'):
             prompt_file_path = 'resources/prompt.txt'
         else:
-            prompt_file_path = 'resources/prompt_category.txt'
+            prompt_file_path = 'resources/pl_category_prompt.txt'
 
         #choose your prompt based on number of data columns 
-        if self.dateColumnCount > 2:
-            prompt_file_path = 'resources/prompt_time_series_anaysis.txt'
-        elif self.dateColumnCount == 2:
-            prompt_file_path = 'resources/prompt_simple_pl.txt'
-        else:
-            prompt_file_path = 'resources/prompt_comparison.txt'
+        if(insights_preference == 'All' or insights_preference == 'Key KPI'):
+            if self.dateColumnCount > 2:
+                prompt_file_path = 'resources/pl_timeseries_prompt.txt'
+            elif self.dateColumnCount == 2:
+                prompt_file_path = 'resources/pl_simple_prompt.txt'
+            else:
+                prompt_file_path = 'resources/pl_comparison_prompt.txt'
 
         aiResponse = None
         aiResponse = self.get_AI_analysis(data, prompt_file_path, industry)
         print('Data returned from AI ' + str(datetime.now().time()))
         
-        #now similarly get analysis on income accounts only
-
-        '''
-        print(self.map_date_columns(["Accounts", "Random", "July 2020 - June 2023", "June 2021", "April 2020", "Changes"], 'resources/prompt_columns_bool.txt'))
-        print(self.map_date_columns(["Accounting", "Data", "March 2019", "May 12 2020", "February 2022", "Changes"], 'resources/prompt_columns_bool.txt'))
-        print(self.map_date_columns(["Assets", "Expenses", "Sept 2021", "Aug 2022", "July 2023", "Changes"], 'resources/prompt_columns_bool.txt'))
-        print(self.map_date_columns(["Liabilities", "Income", "December 2019", "November 2020", "October 2021", "Changes"], 'resources/prompt_columns_bool.txt'))
-        print(self.map_date_columns(["Equity", "Revenue", "January 2020", "February 2021", "March 2022", "Changes"], 'resources/prompt_columns_bool.txt'))
-        print(self.map_date_columns(["Income Statement", "Balance Sheet", "April 2023", "May 2024", "June 2025", "Changes"], 'resources/prompt_columns_bool.txt'))
-        print(self.map_date_columns(["Profit and Loss", "Cash Flow", "October 2020", "November 2021", "December 2022", "Changes"], 'resources/prompt_columns_bool.txt'))
-        print(self.map_date_columns(["Ledger", "Journal", "January 2022", "February 2023", "March 2024", "Changes"], 'resources/prompt_columns_bool.txt'))
-        print(self.map_date_columns(["Debits", "Credits", "June 2020", "July 2021", "August 2022", "Changes"], 'resources/prompt_columns_bool.txt'))
-        print(self.map_date_columns(["Trial Balance", "Closing Entries", "March 2021", "April 2022", "May 2023", "Changes"], 'resources/prompt_columns_bool.txt'))
-        '''
     
         return aiResponse
 
