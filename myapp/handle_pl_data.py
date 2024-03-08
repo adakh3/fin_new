@@ -29,6 +29,13 @@ class HandlePLData:
     #load the data from an excel file 
     def find_data_start(self, data):
 
+        headers = self.data_headers_from_ai ('resources/find_headers_prompt.txt')
+
+        row_number = self.get_file_header_row (headers)
+
+        return row_number
+
+        '''
         #data = pd.read_excel(self.filepath)
         print ('find data start', data)
 
@@ -42,13 +49,14 @@ class HandlePLData:
                 else:
                     return i -1
         return None
+        '''
 
     #load the data from an excel file
     def load_data_table(self, start_row):
 
         #data = pd.read_excel(self.filepath)
         if start_row is not None:
-            data = pd.read_excel(self.filepath, skiprows=range(start_row))
+            data = pd.read_excel(self.filepath, skiprows=range(start_row+1))
             #data = data.iloc[start_row:]
             print('end of load data table', data.head())
             print('columns are', data.columns.tolist())
@@ -345,38 +353,61 @@ class HandlePLData:
             
     '''***** NEW FUNCTION ***** TO TEST ****  '''
 
-    def send_dataframe_to_gpt35(self):
-        # Read the first 20 rows from the excel file
-        df = pd.read_excel(self.filepath, nrows=20)
+    def data_headers_from_ai(self, prompt_file_path):
+
+        # Read the first 10 rows from the excel file
+        df = pd.read_excel(self.filepath, nrows=10)
+
         # Convert the dataframe to a JSON string
-        json_data = df.to_json(orient='records')
+        csv_data = df.to_csv(index=False)
         
         # Load the prompt file
-        with open('account_headers.prompt', 'r') as file:
+        with open(prompt_file_path, 'r') as file: 
             prompt = file.read()
         
-        # Send the JSON data to GPT-3.5 for column header matching
-        completion = self.client.chat.completions.create(
+        # Send the JSON data to AI for column header matching
+        completion = openai.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": prompt},
-                {"role": "user", "content": json_data}
+                {"role": "user", "content": csv_data}
             ]
         )
         
-        # Get the response from GPT-3.5
+        # Get the response from AI
         response = completion.choices[0].message.content
-        
+        return response
+    
+    def get_file_header_row(self, column_names):
+
+        max_matches = 0
+        best_row = None
+
+        # Read the first 10 rows from the excel file
+        df = pd.read_excel(self.filepath, nrows=10)
+        df_as_list = df.head(10).values.tolist()
+   
         # Convert the response JSON string to a dictionary
-        response_dict = json.loads(response)
-        
-        # Get the column headers from the response
-        column_headers = response_dict['choices'][0]['message']['content']
-        
-        # Compare the column headers to the dataframe and get the row number
-        row_number = df.columns.tolist().index(column_headers)
-        
-        return row_number
+        headers = json.loads(column_names)
+        # Extract the list of headers from the dictionary
+        headers_list = headers["headers"]
+
+        for index, row in enumerate(df_as_list):
+            # Convert the row to a list of strings
+            row_as_strings = [str(item) for item in row]
+            print(row_as_strings)
+            
+            # Count the number of headers found in the row
+            matches = sum(header in row_as_strings for header in headers_list)
+            
+            if matches > max_matches:
+                max_matches = matches
+                best_row = index
+
+        print('Row number in the file with the most matches is', best_row)
+
+        return best_row
+
 
 
     def main(self, insights_preference, industry):
@@ -387,15 +418,14 @@ class HandlePLData:
             raise ValueError(str(e)) from e
         
         df = pd.read_excel(self.filepath)
-        # Remove rows where all values are NaN
         
-        
-        #trying this out ---------- I think this should work .. but isnt for some reason 
+        #maybe get rid of this for th time being and see how it goes 
+        '''
         df = df.dropna(how='all')
         df.to_excel(self.filepath, index=False)
         df = pd.read_excel(self.filepath)
+        '''
         
-
         #calling all the functions now 
         i = self.find_data_start(df) 
         if (i is None):
@@ -415,7 +445,7 @@ class HandlePLData:
         data = self.mark_account_types(data, 'Other Expenses')
         data = self.mark_key_kpis(data)
 
-        savedFilename = 'uploaded_files/cleaned_data_all_accounts' + self.filename
+        savedFilename = 'uploaded_files/cleaned_' + self.filename
  
         #select the data to send to AI based on user input 
         if(insights_preference == 'Income'):
@@ -455,7 +485,7 @@ class HandlePLData:
                 prompt_file_path = 'resources/pl_comparison_prompt.txt'
 
         aiResponse = None
-        #aiResponse = self.get_AI_analysis(data, prompt_file_path, industry)
+        aiResponse = self.get_AI_analysis(data, prompt_file_path, industry)
         print('Data returned from AI ' + str(datetime.now().time()))
         
     

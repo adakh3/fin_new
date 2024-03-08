@@ -13,3 +13,5 @@ fig = px.bar(df, x="Fruit", y="Amount", color="City")
 
 # Show the plot
 fig.show()
+
+
