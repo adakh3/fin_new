@@ -266,10 +266,13 @@ class HandlePLData:
         # Set 'Account type' to none for rows where 'Accounts' contains 'total'
         mask = data['Accounts'].str.contains('total', case=False)
         data.loc[mask, 'Account hierarchy'] = 'Subtotals'
+        data.loc[mask, 'Account type'] = np.nan
+
         
         # Set 'Account type' to none for rows where the account is an account group
         mask2 = data.iloc[:, 1].isnull() & data.iloc[:, 2].isnull()
         data.loc[mask2, 'Account hierarchy'] = 'Account group'
+        data.loc[mask2, 'Account type'] = np.nan
         
         #mask1 = data.iloc[start_index:end_index, 1].isnull() & data.iloc[start_index:end_index, 2].isnull()
         # Set 'Account type' Key KPI where the account title is in the list
@@ -465,7 +468,6 @@ class HandlePLData:
         print('Total sales saved ' + str(datetime.now().time()))
         print('Total sales are', self.total_sales)
 
-        #todo: Maybe remove this - or add emphasis in the prompt
         data = self.add_differences(data)
         print('Differences added ' + str(datetime.now().time()))
         
@@ -499,21 +501,20 @@ class HandlePLData:
         #choose your prompt based on number of data columns 
         if(insights_preference == 'All' or insights_preference == 'Key KPI'):
             if self.dateColumnCount > 2:
-                prompt_file_path = 'resources/pl_timeseries_prompt.txt'
+                prompt_file_path = 'resources/pl_simple_prompt.txt'
             elif self.dateColumnCount == 2:
                 prompt_file_path = 'resources/pl_simple_prompt.txt'
             else:
-                prompt_file_path = 'resources/pl_comparison_prompt.txt'
+                prompt_file_path = 'resources/pl_simple_prompt.txt'
         else:
             prompt_file_path = 'resources/pl_category_prompt.txt'
 
         print('Data being sent to AI for analysis and interpretation ' + str(datetime.now().time()))
 
         aiResponse = None
-        aiResponse = self.get_AI_analysis(data, prompt_file_path, industry)
+        #aiResponse = self.get_AI_analysis(data, prompt_file_path, industry)
 
         print('Data returned from AI ' + str(datetime.now().time()))
         
-    
         return aiResponse
 
