@@ -29,44 +29,32 @@ class HandlePLData:
 
     #load the data from an excel file 
     def find_data_start(self, data):
-
-        headers = self.data_headers_from_ai ('resources/find_headers_prompt.txt')
-
-        row_number = self.get_file_header_row (headers)
-
-        return row_number
-
-        '''
-        #data = pd.read_excel(self.filepath)
-        print ('find data start', data)
-
-
-        #data = data.reset_index(drop=True)
-        for i, row in data.iterrows():
-            print('row data', data.iloc[i])
-            if not row.isnull().any():
-                if i == 0:
-                    return i
-                else:
-                    return i -1
-        return None
-        '''
+        try:
+            headers = self.data_headers_from_ai('resources/find_headers_prompt.txt')
+            row_number = self.get_file_header_row(headers)
+            return row_number
+        except Exception as e:
+            print("Error finding data in the file")
+            return None
 
     #load the data from an excel file
     def load_data_table(self, start_row):
 
-        #data = pd.read_excel(self.filepath)
-        if start_row is not None:
-            data = pd.read_excel(self.filepath, skiprows=range(start_row+1))
-            #data = data.iloc[start_row:]
-            print('columns are', data.columns.tolist())
+        try:
+            if start_row is not None:
+                data = pd.read_excel(self.filepath, skiprows=range(start_row+1))
+                #data = data.iloc[start_row:]
+                print('columns are', data.columns.tolist())
 
-        else:
-            data = None
+            else:
+                data = None
 
-        if len(data.shape) < 1:
-            raise Exception("File does not contain data. Please upload a file with valid P&L data.")
+            if len(data.shape) < 1:
+                raise Exception("File does not contain data. Please upload a file with valid P&L data.")
             
+        except Exception as e:
+            print("An error occurred while loading the data")
+            data = None
         
         return data
     
@@ -76,48 +64,53 @@ class HandlePLData:
         Cleans the input data by removing NaN values, renaming columns, and selecting specific columns.
         """
 
-        # Remove rows and columns with all NaNs
-        data = self.remove_nan_values(data)
-    
+        try:
+            # Remove rows and columns with all NaNs
+            data = self.remove_nan_values(data)
 
-        # Validate and rename columns
-        data = self.validate_and_rename_columns(data)
-        print('Data validated and renamed ' + str(datetime.now().time()))
+            # Validate and rename columns
+            data = self.validate_and_rename_columns(data)
+            print('Data validated and renamed ' + str(datetime.now().time()))
 
-        # Clean the 'Accounts' column
-        data = self.clean_accounts_column(data)
-        print('Accounts column cleaned ' + str(datetime.now().time()))
+            # Clean the 'Accounts' column
+            data = self.clean_accounts_column(data)
+            print('Accounts column cleaned ' + str(datetime.now().time()))
 
+            # Get dictionary of date columns
+            date_columns_dict = self.get_date_columns_dict(data)
+            self.dateColumnCount = len(date_columns_dict)
+            if self.dateColumnCount == 0:
+                raise Exception("File does not contain any valid accounting periods. Please upload a file with valid P&L data.")
 
-        # Get dictionary of date columns
-        date_columns_dict = self.get_date_columns_dict(data)
-        self.dateColumnCount = len(date_columns_dict)
-        if self.dateColumnCount == 0:
-            raise Exception("File does not contain any valid accounting periods. Please upload a file with valid P&L data.")
-        
+            # Get indices of columns with True values (date columns)
+            indices = self.get_true_indices(date_columns_dict)
 
-        # Get indices of columns with True values (date columns)
-        indices = self.get_true_indices(date_columns_dict)
+            # Select and clean specific columns
+            data = self.select_baseline_columns(data, indices)
+            if data is None:
+                return None
 
-        # Select and clean specific columns
-        data = self.select_baseline_columns(data, indices)
-        if(data is None):
+            print('Baseline columns selected and cleaned ' + str(datetime.now().time()))
+
+            # Store original column names
+            self.original_columns = data.columns.tolist()
+
+            return data
+
+        except Exception as e:
+            print(f"An error occurred while cleaning and preparing the data")
             return None
-        
-        print('Baseline columns selected and cleaned ' + str(datetime.now().time()))
-
-        # Store original column names
-        self.original_columns = data.columns.tolist()
-
-        return data
 
 
     def remove_nan_values(self, data: pd.DataFrame) -> pd.DataFrame:
         """
         Removes rows and columns with all NaN values from the data.
         """
-        data = data.dropna(axis=0, how='all')
-        data = data.dropna(axis=1, how='all')
+        try:
+            data = data.dropna(axis=0, how='all')
+            data = data.dropna(axis=1, how='all')
+        except Exception as e:
+            print(f"An error occurred while cleaning the data")
         return data
 
 
@@ -125,8 +118,11 @@ class HandlePLData:
         """
         Validates the data has at least 2 columns and renames the first column to 'Accounts' if necessary.
         """
-        if data.columns[0] != 'Accounts':
-            data.rename(columns={data.columns[0]: 'Accounts'}, inplace=True)
+        try:
+            if data.columns[0] != 'Accounts':
+                data.rename(columns={data.columns[0]: 'Accounts'}, inplace=True)
+        except Exception as e:
+            print('An error occered while preparing data')
         return data
 
 
@@ -134,100 +130,128 @@ class HandlePLData:
         """
         Gets a dictionary of date columns from the data. True for date columns and False for non-date columns.
         """
-        column_names = [str(col) for col in data.columns] 
-        column_names_str = ', '.join(column_names)
-        date_columns = self.get_AI_value_match(column_names_str, 'resources/prompt_columns_bool.txt')
-        return json.loads(date_columns)
-    
+        try:
+            column_names = [str(col) for col in data.columns] 
+            column_names_str = ', '.join(column_names)
+            date_columns = self.get_AI_value_match(column_names_str, 'resources/prompt_columns_bool.txt')
+            return json.loads(date_columns)
+        except Exception as e:
+            print('An error occered while preparing data')
+            return {}
+
 
     def get_KPI_rows(self, data: pd.DataFrame) -> pd.Series:
         """
         Gets a DataFrame of rows that match key KPIs.
         """
-        account_names = [str(name) for name in data.iloc[:, 0]]
-        account_names_str = ', '.join(account_names)
-        KPI_matches = self.get_AI_value_match(account_names_str, 'resources/prompt_account_kpis.txt')
-        KPI_matches_dict = json.loads(KPI_matches)
+        try:
+            account_names = [str(name) for name in data.iloc[:, 0]]
+            account_names_str = ', '.join(account_names)
+            KPI_matches = self.get_AI_value_match(account_names_str, 'resources/prompt_account_kpis.txt')
+            KPI_matches_dict = json.loads(KPI_matches)
 
-        # Get a list of all account names that match KPIs (non-null values)
-        matched_accounts = [value for value in KPI_matches_dict.values() if value is not None]
+            # Get a list of all account names that match KPIs (non-null values)
+            matched_accounts = [value for value in KPI_matches_dict.values() if value is not None]
 
-        # Create a data mask for rows with account names in matched_accounts
-        data_mask = data.iloc[:, 0].isin(matched_accounts)
+            # Create a data mask for rows with account names in matched_accounts
+            data_mask = data.iloc[:, 0].isin(matched_accounts)
 
-        return data_mask
-    
+            return data_mask
+        except Exception as e:
+            print('An error occered while preparing data')
+            return pd.Series([])
+
+
     def save_total_sales(self, data):
-
-        total_sales_row = data[data['Account type'] == 'Key KPI'].iloc[0]
-        total_sales = total_sales_row.iloc[1:].tolist()
-        return total_sales
+        try:
+            total_sales_row = data[data['Account type'] == 'Key KPI'].iloc[0]
+            total_sales = total_sales_row.iloc[1:].tolist()
+            return total_sales
+        except Exception as e:
+            print('An error occered while preparing data')
+            return []
 
 
     def get_true_indices(self, date_columns_dict: Dict[str, bool]) -> List[int]:
         """
         Gets the indices of columns with True values in the date columns dictionary.
         """
-        keys = list(date_columns_dict.keys())
-        return [keys.index(key) for key, value in date_columns_dict.items() if value]
+        try:
+            keys = list(date_columns_dict.keys())
+            return [keys.index(key) for key, value in date_columns_dict.items() if value]
+        except Exception as e:
+            print('An error occered while preparing data')
+            return []
+
 
     def select_baseline_columns(self, data: pd.DataFrame, indices: List[int]) -> pd.DataFrame:
         """
         Selects specific columns from the data based on the indices and cleans the 'Accounts' column.
         """
-        dataDates = data.iloc[:, indices]
+        try:
+            dataDates = data.iloc[:, indices]
 
-        if (dataDates.isna() | (dataDates == 0)).all().all():
+            if (dataDates.isna() | (dataDates == 0)).all().all():
+                return None
+            data_mask = data.iloc[:, [0] + indices]
+            return data[data_mask.columns]
+        except Exception as e:
+            print('An error occered while preparing data')
             return None
-        data_mask = data.iloc[:, [0] + indices]
-        return data[data_mask.columns]    
 
 
     def clean_accounts_column(self, data: pd.DataFrame) -> pd.DataFrame:
-        data['Accounts'] = data['Accounts'].apply(lambda x: str(x).lstrip().lstrip(string.digits))
-        return data
+        try:
+            data['Accounts'] = data['Accounts'].apply(lambda x: str(x).lstrip().lstrip(string.digits))
+            return data
+        except Exception as e:
+            print('An error occered while preparing data')
+            return data
 
 
     #separate out what we need from the data, by account type 
     #''''Income', 'Cost of Sales', 'Expenses', 'Other Income(Loss)','Other Expenses', 'Key KPI', 'All')'''
     def select_data(self, data, account_types):
-        if account_types == 'All':
+        try:
+            if account_types == 'All':
+                return data
+            else:
+                data = data[data['Account type'].isin(account_types)]
             return data
-        else:
-            data = data[data['Account type'].isin(account_types)]
-        return data
-        
-    '''
-    def select_data(self, data, account_type):
-
-        if account_type == 'All':
+        except Exception as e:
+            print('An error occered while preparing data')
             return data
-        else:
-            data = data[data['Account type'] == account_type]
 
-        return data
-    '''
 
     def add_percent_sales(self, data: pd.DataFrame) -> pd.DataFrame:
         """
         Adds a '% of Sales' column for each non-NaN column in the original data.
         """
-        i = 0
-        for col in self.original_columns[1:]:
-            if not data[col].isna().all():
-                data[f'% of Sales {col}'] = data[col] / self.total_sales[i]
-                i += 1
-        return data
+        try:
+            i = 0
+            for col in self.original_columns[1:]:
+                if not data[col].isna().all():
+                    data[f'% of Sales {col}'] = data[col] / self.total_sales[i]
+                    i += 1
+            return data
+        except Exception as e:
+            print('An error occurred while preparing data')
+            return data
+
 
     def add_differences(self, data: pd.DataFrame) -> pd.DataFrame:
         """
         Adds a 'Difference' column for each non-NaN column in the original data, starting from the second non-NaN column.
         """
-        date_columns = [col for col in self.original_columns[1:] if not data[col].isna().all()]
+        try:
+            date_columns = [col for col in self.original_columns[1:] if not data[col].isna().all()]
 
-        for i in range(0, len(date_columns)-1):
-            data[f'Difference {date_columns[i]}'] = data[date_columns[i]] - data[date_columns[i+1]]
-        return data
+            for i in range(0, len(date_columns)-1):
+                data[f'Difference {date_columns[i]}'] = data[date_columns[i]] - data[date_columns[i+1]]
+            return data
+        except Exception as e:
+            print('An error occurred while preparing data')
+            return data
 
     '''
     #do not use this function at the moment 
@@ -274,11 +298,6 @@ class HandlePLData:
         data.loc[mask2, 'Account hierarchy'] = 'Account group'
         data.loc[mask2, 'Account type'] = np.nan
         
-        #mask1 = data.iloc[start_index:end_index, 1].isnull() & data.iloc[start_index:end_index, 2].isnull()
-        # Set 'Account type' Key KPI where the account title is in the list
-        #titles_to_keep = ['Total Income', 'Total Cost of Sales', 'Gross Profit', 'Total Expenses', 'Net Earnings', 'Total Other Expenses', 'Total Other Income(Loss)']
-        
-
         return data
     
     def mark_key_kpis(self, data: pd.DataFrame) -> pd.DataFrame:
@@ -296,18 +315,23 @@ class HandlePLData:
     #send to AI for human language interpretation
     def get_AI_analysis(self, data, prompt_file_path, industry):
         #prompt2 gves much worse results - so I think my original prompt is better
-        with open(prompt_file_path, 'r') as file: 
-            prompt = file.read()
-        csv_text = data.to_csv(index=False)
-        completion = self.client.chat.completions.create(
-        model = "gpt-4-turbo-preview",#"gpt-3.5-turbo",
-        seed=50,
-        messages=[
-            {"role": "system", "content": prompt},
-            {"role": "user", "content": f"Here is a CSV dataset:\n{csv_text}\nNow, perform some analysis on this data. This is from {industry} industry for more context",}
-            ]
-        )
-        return completion.choices[0].message.content
+        try:
+            with open(prompt_file_path, 'r') as file: 
+                prompt = file.read()
+            csv_text = data.to_csv(index=False)
+        
+            completion = self.client.chat.completions.create(
+                model = "gpt-4-turbo-preview",#"gpt-3.5-turbo",
+                seed=50,
+                messages=[
+                    {"role": "system", "content": prompt},
+                    {"role": "user", "content": f"Here is a CSV dataset:\n{csv_text}\nNow, perform some analysis on this data. This is from {industry} industry for more context",}
+                ]
+            )
+            return completion.choices[0].message.content
+        except Exception as e:
+            print(f"Error occurred during AI analysis")
+            return None
 
 
     #get a list of column headers from the data - call this on cleaned data
@@ -336,20 +360,24 @@ class HandlePLData:
     #sends columns to GPT 3.5 to map to a set of tags that I give it
     #returns a dictionary with indexes for accounts and date columns 
     def get_AI_value_match(self, values, prompt_file_path):
-        with open(prompt_file_path, 'r') as file: 
-            prompt = file.read()
-        data_string = values
-        #data_string = columns.to_csv(index=False)
-        completion = self.client.chat.completions.create(
-        model = "gpt-3.5-turbo",
-        seed=50,
-        response_format={ "type": "json_object" },
-        messages=[
-            {"role": "system", "content": prompt},
-            {"role": "user", "content": f"Here is a CSV dataset:\n{data_string}\n",}
-            ]
-        )
-        return completion.choices[0].message.content
+        try:
+            with open(prompt_file_path, 'r') as file: 
+                prompt = file.read()
+            data_string = values
+            #data_string = columns.to_csv(index=False)
+            completion = self.client.chat.completions.create(
+            model = "gpt-3.5-turbo",
+            seed=50,
+            response_format={ "type": "json_object" },
+            messages=[
+                {"role": "system", "content": prompt},
+                {"role": "user", "content": f"Here is a CSV dataset:\n{data_string}\n",}
+                ]
+            )
+            return completion.choices[0].message.content
+        except Exception as e:
+            print(f"An error occurred during AI analysis")
+            return None
         
 
     def file_content_check(self):
@@ -373,29 +401,34 @@ class HandlePLData:
     '''***** NEW FUNCTION ***** TO TEST ****  '''
 
     def data_headers_from_ai(self, prompt_file_path):
+        try:
+            # Read the first 10 rows from the excel file
+            df = pd.read_excel(self.filepath, nrows=10)
 
-        # Read the first 10 rows from the excel file
-        df = pd.read_excel(self.filepath, nrows=10)
-
-        # Convert the dataframe to a JSON string
-        csv_data = df.to_csv(index=False)
-        
-        # Load the prompt file
-        with open(prompt_file_path, 'r') as file: 
-            prompt = file.read()
-        
-        # Send the JSON data to AI for column header matching
-        completion = openai.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": prompt},
-                {"role": "user", "content": csv_data}
-            ]
-        )
-        
-        # Get the response from AI
-        response = completion.choices[0].message.content
-        return response
+            # Convert the dataframe to a JSON string
+            csv_data = df.to_csv(index=False)
+            
+            # Load the prompt file
+            with open(prompt_file_path, 'r') as file: 
+                prompt = file.read()
+            
+            # Send the JSON data to AI for column header matching
+            completion = openai.chat.completions.create(
+                model="gpt-3.5-turbo",
+                seed=50,
+                messages=[
+                    {"role": "system", "content": prompt},
+                    {"role": "user", "content": csv_data}
+                ]
+            )
+            
+            # Get the response from AI
+            response = completion.choices[0].message.content
+            print ("Headers response from AI is:", response)
+            return response
+        except Exception as e:
+            print("An error occurred during AI analysis. Please try agian.")
+            return None
     
     def get_file_header_row(self, column_names):
 
@@ -410,11 +443,11 @@ class HandlePLData:
         headers = json.loads(column_names)
         # Extract the list of headers from the dictionary
         headers_list = headers["headers"]
+        print('Headers list is:', headers_list)
 
         for index, row in enumerate(df_as_list):
             # Convert the row to a list of strings
             row_as_strings = [str(item) for item in row]
-            print('Headers rows found are:', row_as_strings)
             
             # Count the number of headers found in the row
             matches = sum(header in row_as_strings for header in headers_list)
@@ -512,7 +545,7 @@ class HandlePLData:
         print('Data being sent to AI for analysis and interpretation ' + str(datetime.now().time()))
 
         aiResponse = None
-        #aiResponse = self.get_AI_analysis(data, prompt_file_path, industry)
+        aiResponse = self.get_AI_analysis(data, prompt_file_path, industry)
 
         print('Data returned from AI ' + str(datetime.now().time()))
         
