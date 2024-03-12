@@ -10,9 +10,12 @@ a row with string values like accounts, Jan 22, percentage change, difference
 
 Make sure you only return data from one and only one row. Do not use more than one row for the response. Pick the most appropriate row and use just that. 
 
+If the row does not have any date values, ignore it as it cant be the header
+
 Response should be contents of this row. Ignore any 'unnamed columns'...
 response should be like 
 
 {
 "headers": ["Accounts", "Jul 2023 - Jan 2024", "Jul 2022 - Jan 2023 (PP)", "Change", "% Change"],
 }
+

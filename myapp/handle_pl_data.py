@@ -30,8 +30,8 @@ class HandlePLData:
     #load the data from an excel file 
     def find_data_start(self, data):
         try:
-            headers = self.data_headers_from_ai('resources/find_headers_prompt.txt')
-            row_number = self.get_file_header_row(headers)
+            #headers = self.data_headers_from_ai('resources/find_headers_prompt.txt')
+            row_number = 4 #self.get_file_header_row(headers)
             return row_number
         except Exception as e:
             print("Error finding data in the file")
@@ -545,7 +545,7 @@ class HandlePLData:
         print('Data being sent to AI for analysis and interpretation ' + str(datetime.now().time()))
 
         aiResponse = None
-        aiResponse = self.get_AI_analysis(data, prompt_file_path, industry)
+        #aiResponse = self.get_AI_analysis(data, prompt_file_path, industry)
 
         print('Data returned from AI ' + str(datetime.now().time()))
         
