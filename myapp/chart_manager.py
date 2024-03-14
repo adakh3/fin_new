@@ -20,7 +20,7 @@ class ChartManager:
     def plot_charts(self,df):
         charts = []
 
-        for i in range(1, len(df)):
+        for i in range(len(df)):
             row_name = df.iloc[i, 0]
             values = df.iloc[i, 1:].astype(float).values
 

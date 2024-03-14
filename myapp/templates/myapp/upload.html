@@ -20,6 +20,11 @@
       padding: 20px;
     }
 
+    input[type="number"] {
+    margin-top: 20px;
+    max-width: 100px;
+    }
+
     .output-box {
       border: 1px solid #ccc;
       padding: 10px;
@@ -83,7 +88,11 @@
       {% csrf_token %}
       {{ form.as_p }}
 
+      <label for="row_number">Please provide the excel file row number that contains column names</label>
+      <input type="number" id="row_number" name="row_number" min="1" required>
+
       <label for="insights">What would you like to analyse?</label>
+      </select>
       <select name="insights" id="insights">
         <!--<option value="Key KPI" selected>P&L high level insights</option>-->
         <option value="All">Overall P&L insights</option>

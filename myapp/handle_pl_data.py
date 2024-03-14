@@ -31,10 +31,10 @@ class HandlePLData:
         self.filename = filename
 
     #load the data from an excel file 
-    def find_data_start(self, data):
+    def find_data_start(self, data, row_number):
         try:
             #headers = self.data_headers_from_ai('resources/find_headers_prompt.txt')
-            row_number = 4 #self.get_file_header_row(headers)
+            row_number = row_number - 2 #self.get_file_header_row(headers)
             return row_number
         except Exception as e:
             print("Error finding data in the file")
@@ -468,7 +468,7 @@ class HandlePLData:
         return best_row
 
 
-    def main(self, insights_preference, industry):
+    def main(self, insights_preference, industry, row_number):
 
         try:
             self.file_content_check()   
@@ -478,7 +478,7 @@ class HandlePLData:
         df = pd.read_excel(self.filepath)
         
         #calling all the functions now 
-        i = self.find_data_start(df) 
+        i = self.find_data_start(df, row_number) 
         if (i is None):
             raise Exception("File does not contain valid data. Please upload a file with valid P&L data.")
 

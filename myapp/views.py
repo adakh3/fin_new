@@ -15,7 +15,8 @@ def upload_file_view(request):
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
             try:
-                response, charts = handle_file(request.FILES['file'], request )
+                row_number = int(request.POST['row_number'])  # Get the row_number field
+                response, charts = handle_file(request.FILES['file'], request, row_number )
             except Exception as e:
                 context['error'] = f'{e}'
                 return render(request, 'myapp/upload.html', context)
@@ -56,7 +57,7 @@ def file_sanitiser(f, max_size=5000000):
     return True
 
 
-def handle_file(f, request):
+def handle_file(f, request, row_number):
 #if the file is an excel file, then we upload it and start, else send an error message
     
     try:
@@ -78,7 +79,7 @@ def handle_file(f, request):
     
     #call the main method of the HandlePLData class
     try:
-        results = my_object.main(request.POST['insights'], request.POST['industry'])
+        results = my_object.main(request.POST['insights'], request.POST['industry'], row_number)
     except Exception as e:
         raise ValueError(str(e)) from e
 

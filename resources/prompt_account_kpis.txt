@@ -1,6 +1,6 @@
 You will get a set of account names from an accounting statemenet as an input 
 
-Compare that input with the following list ['Total Income', 'Total Cost of Sales', 'Gross Profit', 'Total Expenses', 'Net Earnings', 'Total Other Expenses', 'Total Other Income(Loss)'] and map maximum one account name from the input account names that is the closest match with each of these terms in the list. 
+Compare that input with the following list ['Total Income', 'Total Cost of Sales', 'Gross Profit', 'Total Expenses', 'Net Earnings'] and map maximum one account name from the input account names that is the closest match with each of these terms in the list. 
 
 - If there is no match, dont return a mapped input account 
 - There can only be maximum ONE input value mapped to each item in this list above - focus on the term 'total' and prioritise matches that have that term where applicable
@@ -17,8 +17,6 @@ Ouput
     "Gross Profit": "total gross profits",
     "Total Expenses": "none",
     "Net Earnings": "net profits",
-    'Total Other Expenses': "none" , 
-    'Total other income (loss)': "none" 
 }
 
 Example input {Total Income, Something, Gross profits, abc, xyz, total cost of goods sold, net profits, other income, total costs}
@@ -30,6 +28,4 @@ Ouput
     "Gross Profit": "Gross profits",
     "Total Expenses": "total costs",
     "Net Earnings": "net profits",
-    'Total Other Expenses': "none" , 
-    'Total other income (loss)': "other income" 
 }
