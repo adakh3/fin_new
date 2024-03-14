@@ -5,6 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -162,6 +163,11 @@
         <p id="outputMessage">{{ message|safe }}</p>
       {% else %}
         <p id="outputMessage"></p>
+      {% endif %}
+      {% if charts %}
+        {% for chart in charts %}
+          {{ chart|safe }}
+        {% endfor %}
       {% endif %}
     </div>
   </div>

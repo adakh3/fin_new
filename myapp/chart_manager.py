@@ -1,22 +1,33 @@
-import pandas as pd
 import plotly.express as px
-import plotly.offline as opy
 
 class ChartManager:
-    def __init__(self, df: pd.DataFrame):
-        self.df = df
+    def __init__(self):
+        pass
 
-    def create_scatter_plot(self, x: str, y: str, color: str) -> str:
-        fig = px.scatter(self.df, x=x, y=y, color=color)
-        plot_div = opy.plot(fig, auto_open=False, output_type='div')
-        return plot_div
 
-    def create_bar_chart(self, x: str, y: str, color: str) -> str:
-        fig = px.bar(self.df, x=x, y=y, color=color)
-        plot_div = opy.plot(fig, auto_open=False, output_type='div')
-        return plot_div
+    def create_chart_dataframe(self, df, account_type, date_column_count):
+        # Get the date column count
+        
+        # Filter the DataFrame based on the account_type
+        filtered_df = df[df['Account type'] == account_type]
+        
+        # Select the desired columns
+        chart_df = filtered_df.iloc[:, [0] + list(range(1, date_column_count + 1))]
+        
+        return chart_df
     
-    def create_line_chart(self, x: str, y: str, color: str) -> str:
-        fig = px.line(self.df, x=x, y=y, color=color)
-        plot_div = opy.plot(fig, auto_open=False, output_type='div')
-        return plot_div
+
+    def plot_charts(self,df):
+        charts = []
+
+        for i in range(1, len(df)):
+            row_name = df.iloc[i, 0]
+            values = df.iloc[i, 1:].astype(float).values
+
+            fig = px.bar(x=df.columns[1:], y=values,labels={'x': 'Columns', 'y': row_name})
+
+            fig.update_layout(title=row_name)
+
+            charts.append(fig.to_html(full_html=False))
+
+        return charts

@@ -9,6 +9,7 @@ from openai import OpenAI
 import string
 import json
 from typing import List, Dict
+from .chart_manager import ChartManager
 
 ''' Overall separate out key KPIs, revenues, COGS, costs, other income and costs --- 
 one by one send these all to GPT-4 to get insights and predictions 
@@ -22,6 +23,8 @@ class HandlePLData:
     dateColumnCount = 0
     total_sales = []
     original_columns = []
+    chart_manager = ChartManager()
+    charts = None
 
     def __init__(self, filename):
         self.filepath = 'uploaded_files/' + filename
@@ -78,12 +81,15 @@ class HandlePLData:
 
             # Get dictionary of date columns
             date_columns_dict = self.get_date_columns_dict(data)
+            # Remove key-value pairs where value is 'false'
+            #date_columns_dict = {key: value for key, value in date_columns_dict.items() if value}
             self.dateColumnCount = len(date_columns_dict)
             if self.dateColumnCount == 0:
                 raise Exception("File does not contain any valid accounting periods. Please upload a file with valid P&L data.")
 
             # Get indices of columns with True values (date columns)
             indices = self.get_true_indices(date_columns_dict)
+            self.dateColumnCount = len(indices)
 
             # Select and clean specific columns
             data = self.select_baseline_columns(data, indices)
@@ -269,6 +275,7 @@ class HandlePLData:
     def mark_account_types(self, data, accountType):
         # Find the indices of the rows where column 1 between account type and total account type
         #todo: improve this section 
+        #data = data.loc[~data.index.duplicated(keep='first')]
         matching_rows_start = data[data['Accounts'] == accountType]
 
         if matching_rows_start.empty:
@@ -461,7 +468,6 @@ class HandlePLData:
         return best_row
 
 
-
     def main(self, insights_preference, industry):
 
         try:
@@ -500,6 +506,12 @@ class HandlePLData:
 
         print('Total sales saved ' + str(datetime.now().time()))
         print('Total sales are', self.total_sales)
+
+        #get some KPI charts before adding anything else 
+        charts_df = self.chart_manager.create_chart_dataframe(data,'Key KPI', self.dateColumnCount)
+        print('content for charts is:',charts_df)
+        self.charts = self.chart_manager.plot_charts(charts_df)
+
 
         data = self.add_differences(data)
         print('Differences added ' + str(datetime.now().time()))
@@ -545,7 +557,7 @@ class HandlePLData:
         print('Data being sent to AI for analysis and interpretation ' + str(datetime.now().time()))
 
         aiResponse = None
-        #aiResponse = self.get_AI_analysis(data, prompt_file_path, industry)
+        aiResponse = self.get_AI_analysis(data, prompt_file_path, industry)
 
         print('Data returned from AI ' + str(datetime.now().time()))
         
