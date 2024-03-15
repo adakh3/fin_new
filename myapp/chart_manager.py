@@ -1,4 +1,5 @@
 import plotly.express as px
+import plotly.graph_objects as go
 
 class ChartManager:
     def __init__(self):
@@ -17,7 +18,30 @@ class ChartManager:
         return chart_df
     
 
-    def plot_charts(self,df):
+    def plot_stacked_bar_charts(self, df, chartTitle):
+        # Prepare data for stacked bar chart
+        data = []
+        for i in range(len(df)):
+            row_name = df.iloc[i, 0]
+            values = df.iloc[i, 1:].astype(float).values
+            data.append(go.Bar(name=row_name, x=df.columns[1:], y=values))
+
+        # Create figure
+        fig = go.Figure(data=data)
+        print('chart data is', fig.data)
+
+
+        # Change the bar mode
+        fig.update_layout(barmode='stack', title = chartTitle)
+        print('chart layout is', fig.layout)
+
+
+        # Convert the figure to HTML and return it
+        return [fig.to_html(full_html=False)]
+
+
+
+    def plot_bar_charts(self,df):
         charts = []
 
         for i in range(len(df)):

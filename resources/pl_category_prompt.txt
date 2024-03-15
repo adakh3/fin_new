@@ -24,7 +24,7 @@ Make sure to  look at all the columns in data for your analysis, especially perc
   
 Output  
 - Summarise the most critical bits, just the top 5 bits of overall importance
-- Also provide a table with the most important numbers
+- Also provide an html formatted table with the most important numbers
 
 Structure your response with headings and formating, suiteable for a business report, and 
 suitable for html rendering. Headings will be <h3> and <h4> tags. No markdown format.

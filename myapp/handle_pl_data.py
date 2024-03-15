@@ -405,8 +405,6 @@ class HandlePLData:
             
         return True
             
-    '''***** NEW FUNCTION ***** TO TEST ****  '''
-
     def data_headers_from_ai(self, prompt_file_path):
         try:
             # Read the first 10 rows from the excel file
@@ -507,33 +505,52 @@ class HandlePLData:
         print('Total sales saved ' + str(datetime.now().time()))
         print('Total sales are', self.total_sales)
 
-        #get some KPI charts before adding anything else 
-        charts_df = self.chart_manager.create_chart_dataframe(data,'Key KPI', self.dateColumnCount)
-        print('content for charts is:',charts_df)
-        self.charts = self.chart_manager.plot_charts(charts_df)
-
-
-        data = self.add_differences(data)
-        print('Differences added ' + str(datetime.now().time()))
-        
-        data = self.add_percent_sales(data)
-        print('Percent sales differences added ' + str(datetime.now().time()))
  
-        #select the data to send to AI based on user input 
+        #select the data based on user input 
         if(insights_preference == 'Income'):
-            data = self.select_data(data, ['Income'])
+            data = self.select_data(data, ['Income'])#here as well we should be able to send a list perhaps
         elif(insights_preference == 'Cost of Sales'):
-            data = self.select_data(data, ['Cost of Sales'])
+            data = self.select_data(data, ['Cost of Sales'])#here we should be able to send a list of values 
         elif(insights_preference == 'Expenses'):
             data = self.select_data(data, ['Expenses'])
+        else:
+            data = self.select_data(data, 'All')
+        
+        '''
+        elif(insights_preference == 'Cost of Sales'):
+            data = self.select_data(data, ['Cost of Sales']) 
+        
         elif(insights_preference == 'Other Income(Loss)'):
             data = self.select_data(data, ['Other Income(Loss)'])
         elif(insights_preference == 'Other Expenses'):
             data = self.select_data(data, ['Other Expenses'])
         elif(insights_preference == 'Key KPI'):
             data = self.select_data(data, ['Key KPI'])
-        else:
-            data = self.select_data(data, 'All')
+        '''
+
+        #get some KPI charts before adding anything else 
+        if(insights_preference == 'Income'):
+            charts_df = self.chart_manager.create_chart_dataframe(data,'Income', self.dateColumnCount)
+            self.charts = self.chart_manager.plot_stacked_bar_charts(charts_df, 'Income')
+        elif(insights_preference == 'Cost of Sales'):
+            charts_df = self.chart_manager.create_chart_dataframe(data,'Cost of Sales', self.dateColumnCount)
+            self.charts = self.chart_manager.plot_stacked_bar_charts(charts_df, 'Cost of Sales')
+        elif(insights_preference == 'Expenses'):
+            charts_df = self.chart_manager.create_chart_dataframe(data,'Expenses', self.dateColumnCount)
+            self.charts = self.chart_manager.plot_stacked_bar_charts(charts_df, 'Expenses')
+        else: #if its a general P&L analyis
+            charts_df = self.chart_manager.create_chart_dataframe(data,'Key KPI', self.dateColumnCount)
+            self.charts = self.chart_manager.plot_bar_charts(charts_df)
+
+        print('content for charts is:',charts_df)
+
+        data = self.add_differences(data)
+        print('Differences added ' + str(datetime.now().time()))
+        
+        data = self.add_percent_sales(data)
+        print('Percent sales differences added ' + str(datetime.now().time()))
+
+        
 
         print('Number of rows in data: ', len(data))
         print('Number of columns in data: ', len(data.columns))

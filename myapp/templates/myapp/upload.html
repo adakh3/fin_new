@@ -6,16 +6,19 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <!-- Import Playfair Display and Roboto from Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Tiempos+Headline:wght@400;700&family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
   <!-- Add Bootstrap CSS -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
   <!-- Add your custom CSS -->
+  <link rel="stylesheet" href="styles.css">
   
 </head>
 <body>
   <div class="container">
-    <h2>Relogue AI - Profit & Loss Analyser <span class="badge badge-warning">Beta</span> </h2>
-    <h4>Instant, In-depth Insights from your P&L using best in class AI</h4>
-    <p>Simply upload a Profit and Loss Statement from Quickbooks (in .xlsx format) for a single period, comparison with a previous period, or over several months.</p>
+    <h2> Relogue AI: Your In-house Financial Analyst<span class="badge badge-warning">Beta</span> </h2>
+    <h4>Imagine having a decidated financial analyst available to your business at all times </h4>
+    <p>To get instant insights, simply upload a Profit and Loss Statement from Quickbooks (in .xlsx format) for a single period, comparison with a previous period, or over several months.</p>
     <form id='yourFormId' method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
       {% csrf_token %}
       {{ form.as_p }}
@@ -27,9 +30,9 @@
         <label for="insights">What would you like to analyse?</label>
         <select name="insights" id="insights" class="form-control">
           <option value="All">Overall P&L insights</option>
-          <option value="Income">Income insights</option>
-          <option value="Cost of Sales">Cost of sales insights</option>
-          <option value="Expenses">Expenses insights</option>
+          <option value="Income">Revenue insights</option>
+          <option value="Cost of Sales">Costs of sales insights</option>
+          <option value="Expenses">Administrative expense insights</option>
           <!-- Add the rest of your options here -->
         </select>
       </div>

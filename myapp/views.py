@@ -6,6 +6,7 @@ from .handle_pl_data import HandlePLData
 from django.http import JsonResponse
 import pandas as pd
 import mimetypes
+from .text_formatter import TextFormatter
 
 
 def upload_file_view(request):
@@ -80,6 +81,8 @@ def handle_file(f, request, row_number):
     #call the main method of the HandlePLData class
     try:
         results = my_object.main(request.POST['insights'], request.POST['industry'], row_number)
+        if(results is not None):
+            results = TextFormatter.convert_markdown_to_html(results)
     except Exception as e:
         raise ValueError(str(e)) from e
 
