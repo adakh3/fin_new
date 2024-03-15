@@ -1,173 +1,104 @@
+
 <!DOCTYPE html>
 <html>
-
 <head>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f9f9f9;
-    }
-
-    .container {
-      width: 80%;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    input[type="number"] {
-    margin-top: 20px;
-    max-width: 100px;
-    }
-
-    .output-box {
-      border: 1px solid #ccc;
-      padding: 10px;
-      margin-top: 20px;
-      height: 800px;
-      overflow: auto;
-      background-color: #fff;
-    }
-
-    form {
-      display: flex;
-      flex-direction: column;
-    }
-
-    select{
-      margin-top: 20px;
-      max-width: 400px;
-    }
-
-    button
-    {
-      max-width: 300px;
-      margin: 20px 0;
-      display: block;
-      background-color: #4CAF50; /* Green background */
-      color: white; /* White text */
-      padding: 14px 20px; /* Some padding */
-      border: none; /* No border */
-      border-radius: 4px; /* Rounded corners */
-      cursor: pointer; /* Add a pointer cursor on mouse-over */
-    }
-
-    label, .form-control {
-      margin-bottom: 0;  /* Remove bottom margin */
-    }
-
-    .error {
-      color: red;
-    }
-
-    .beta-tag {
-    background-color: #f0ad4e;
-    color: white;
-    border-radius: 2px;
-    font-size: 0.6em;
-    padding: 2px 4px;
-    vertical-align: middle;
-}
-
-    
-  </style>
+  <!-- Add Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+  <!-- Add your custom CSS -->
+  
 </head>
-
 <body>
   <div class="container">
-    <h2>Relogue AI - Profit & Loss Analyser <span class="beta-tag">Beta</span> </h2>
+    <h2>Relogue AI - Profit & Loss Analyser <span class="badge badge-warning">Beta</span> </h2>
     <h4>Instant, In-depth Insights from your P&L using best in class AI</h4>
     <p>Simply upload a Profit and Loss Statement from Quickbooks (in .xlsx format) for a single period, comparison with a previous period, or over several months.</p>
-
-    <form id='yourFormId' method="post" enctype="multipart/form-data">
+    <form id='yourFormId' method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
       {% csrf_token %}
       {{ form.as_p }}
-
-      <label for="row_number">Please provide the excel file row number that contains column names</label>
-      <input type="number" id="row_number" name="row_number" min="1" required>
-
-      <label for="insights">What would you like to analyse?</label>
+      <div class="form-group">
+        <label for="row_number">Please provide the excel file row number that contains column names</label>
+        <input type="number" id="row_number" name="row_number" min="1" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label for="insights">What would you like to analyse?</label>
+        <select name="insights" id="insights" class="form-control">
+          <option value="All">Overall P&L insights</option>
+          <option value="Income">Income insights</option>
+          <option value="Cost of Sales">Cost of sales insights</option>
+          <option value="Expenses">Expenses insights</option>
+          <!-- Add the rest of your options here -->
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="industry">Pick a relevant industry for more helpful insights</label>
+        <select name="industry" id="industry-dropdown" class="form-control">
+          <option value="all" selected>Prefer not to say</option>
+          <option value="agriculture">Agriculture</option>
+          <option value="artisanal_foods">Artisanal Foods</option>
+          <option value="arts_crafts">Arts & Crafts</option>
+          <option value="automotive_services">Automotive Services</option>
+          <option value="beauty_care">Beauty Care</option>
+          <option value="cafes">Cafes</option>
+          <option value="catering">Catering</option>
+          <option value="childcare">Childcare</option>
+          <option value="cleaning_services">Cleaning Services</option>
+          <option value="consulting">Consulting</option>
+          <option value="design_services">Design Services</option>
+          <option value="education">Education</option>
+          <option value="entertainment">Entertainment</option>
+          <option value="event_planning">Event Planning</option>
+          <option value="fashion_retail">Fashion Retail</option>
+          <option value="financial_services">Financial Services</option>
+          <option value="fitness_wellness">Fitness & Wellness</option>
+          <option value="florists">Florists</option>
+          <option value="food_trucks">Food Trucks</option>
+          <option value="gardening">Gardening</option>
+          <option value="grocery_stores">Grocery Stores</option>
+          <option value="handyman_services">Handyman Services</option>
+          <option value="healthcare_clinics">Healthcare Clinics</option>
+          <option value="home_decor">Home Decor</option>
+          <option value="hospitality">Hospitality</option>
+          <option value="it_services">IT Services</option>
+          <option value="jewelry">Jewelry</option>
+          <option value="landscaping">Landscaping</option>
+          <option value="laundry_services">Laundry Services</option>
+          <option value="legal_services">Legal Services</option>
+          <option value="manufacturing">Manufacturing</option>
+          <option value="marketing_advertising">Marketing & Advertising</option>
+          <option value="massage_therapy">Massage Therapy</option>
+          <option value="music_entertainment">Music & Entertainment</option>
+          <option value="pet_services">Pet Services</option>
+          <option value="photography">Photography</option>
+          <option value="plumbing">Plumbing</option>
+          <option value="real_estate">Real Estate</option>
+          <option value="restaurants">Restaurants</option>
+          <option value="salons">Salons</option>
+          <option value="software_development">Software Development</option>
+          <option value="sports_recreation">Sports & Recreation</option>
+          <option value="tailoring">Tailoring</option>
+          <option value="tech_repair">Tech Repair</option>
+          <option value="transportation">Transportation</option>
+          <option value="travel_agencies">Travel Agencies</option>
+          <option value="tutoring_services">Tutoring Services</option>
+          <option value="veterinary_services">Veterinary Services</option>
+          <option value="web_design">Web Design</option>
+          <option value="wedding_services">Wedding Services</option>
+          <option value="yoga_studios">Yoga Studios</option>
       </select>
-      <select name="insights" id="insights">
-        <!--<option value="Key KPI" selected>P&L high level insights</option>-->
-        <option value="All">Overall P&L insights</option>
-        <option value="Income">Income insights</option>
-        <option value="Cost of Sales">Cost of sales insights</option>
-        <option value="Expenses">Expenses insights</option>
-        <option value="Other Income(Loss)">Other income insights</option>
-        <option value="Other Expenses">Other expenses insights</option>
-      </select>
-
-      <p> </p>
-      <label for="industry">Pick a relevant industry for more helpful insights</label>
-      <select name="industry" id="industry-dropdown">
-        <option value="all" selected>Prefer not to say</option>
-        <option value="agriculture">Agriculture</option>
-        <option value="artisanal_foods">Artisanal Foods</option>
-        <option value="arts_crafts">Arts & Crafts</option>
-        <option value="automotive_services">Automotive Services</option>
-        <option value="beauty_care">Beauty Care</option>
-        <option value="cafes">Cafes</option>
-        <option value="catering">Catering</option>
-        <option value="childcare">Childcare</option>
-        <option value="cleaning_services">Cleaning Services</option>
-        <option value="consulting">Consulting</option>
-        <option value="design_services">Design Services</option>
-        <option value="education">Education</option>
-        <option value="entertainment">Entertainment</option>
-        <option value="event_planning">Event Planning</option>
-        <option value="fashion_retail">Fashion Retail</option>
-        <option value="financial_services">Financial Services</option>
-        <option value="fitness_wellness">Fitness & Wellness</option>
-        <option value="florists">Florists</option>
-        <option value="food_trucks">Food Trucks</option>
-        <option value="gardening">Gardening</option>
-        <option value="grocery_stores">Grocery Stores</option>
-        <option value="handyman_services">Handyman Services</option>
-        <option value="healthcare_clinics">Healthcare Clinics</option>
-        <option value="home_decor">Home Decor</option>
-        <option value="hospitality">Hospitality</option>
-        <option value="it_services">IT Services</option>
-        <option value="jewelry">Jewelry</option>
-        <option value="landscaping">Landscaping</option>
-        <option value="laundry_services">Laundry Services</option>
-        <option value="legal_services">Legal Services</option>
-        <option value="manufacturing">Manufacturing</option>
-        <option value="marketing_advertising">Marketing & Advertising</option>
-        <option value="massage_therapy">Massage Therapy</option>
-        <option value="music_entertainment">Music & Entertainment</option>
-        <option value="pet_services">Pet Services</option>
-        <option value="photography">Photography</option>
-        <option value="plumbing">Plumbing</option>
-        <option value="real_estate">Real Estate</option>
-        <option value="restaurants">Restaurants</option>
-        <option value="salons">Salons</option>
-        <option value="software_development">Software Development</option>
-        <option value="sports_recreation">Sports & Recreation</option>
-        <option value="tailoring">Tailoring</option>
-        <option value="tech_repair">Tech Repair</option>
-        <option value="transportation">Transportation</option>
-        <option value="travel_agencies">Travel Agencies</option>
-        <option value="tutoring_services">Tutoring Services</option>
-        <option value="veterinary_services">Veterinary Services</option>
-        <option value="web_design">Web Design</option>
-        <option value="wedding_services">Wedding Services</option>
-        <option value="yoga_studios">Yoga Studios</option>
-    </select>
-    
-      <button type="submit" id="uploadButton">Upload</button>
+      </div>
+      <!-- Add the rest of your form fields here -->
+      <div class="button-container mb-3">
+        <button type="submit" id="uploadButton" class="btn btn-primary">Upload</button>
+      </div>
     </form>
-
     {% if error %}
     <p class="error">{{ error }}</p>
     {% endif %}
-
-    <div class="output-box">
+    <div class="output-box p-3 mb-2 bg-light text-dark border d-flex flex-column" style="min-height: 50vh;">
       {% if message %}
         <p id="outputMessage">{{ message|safe }}</p>
       {% else %}
