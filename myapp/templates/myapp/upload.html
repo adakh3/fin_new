@@ -15,15 +15,15 @@
   
 </head>
 <body>
-  <div class="container">
-    <h2> Relogue AI: Your In-house Financial Analyst<span class="badge badge-warning">Beta</span> </h2>
-    <h4>Imagine having a decidated financial analyst available to your business at all times </h4>
+  <div class="container pt-5">
+    <h2> Relogue AI: Your In-house Financial Analyst<span class="badge badge-warning ml-2 align-middle">Beta</span> </h2>
+    <h4>A decidated financial analyst available to your business 24-7 </h4>
     <p>To get instant insights, simply upload a Profit and Loss Statement from Quickbooks (in .xlsx format) for a single period, comparison with a previous period, or over several months.</p>
     <form id='yourFormId' method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
       {% csrf_token %}
       {{ form.as_p }}
       <div class="form-group">
-        <label for="row_number">Please provide the excel file row number that contains column names</label>
+        <label for="row_number">Could you tell us the row number where your column titles are? This is where your data begins in the Excel file.</label>
         <input type="number" id="row_number" name="row_number" min="1" class="form-control" required>
       </div>
       <div class="form-group">
@@ -39,7 +39,7 @@
       <div class="form-group">
         <label for="industry">Pick a relevant industry for more helpful insights</label>
         <select name="industry" id="industry-dropdown" class="form-control">
-          <option value="all" selected>Prefer not to say</option>
+          <option value="all" selected>None</option>
           <option value="agriculture">Agriculture</option>
           <option value="artisanal_foods">Artisanal Foods</option>
           <option value="arts_crafts">Arts & Crafts</option>
@@ -102,6 +102,7 @@
     <p class="error">{{ error }}</p>
     {% endif %}
     <div class="output-box p-3 mb-2 bg-light text-dark border d-flex flex-column" style="min-height: 50vh;">
+      <div id="loading" style="display: none;">Analysing your data. Please do not refresh the browser...</div>
       {% if message %}
         <p id="outputMessage">{{ message|safe }}</p>
       {% else %}
@@ -114,5 +115,12 @@
       {% endif %}
     </div>
   </div>
+  <script>
+    document.getElementById('yourFormId').addEventListener('submit', function() {
+      document.getElementById('loading').style.display = 'block';
+    });
+    </script>
+
 </body>
+
 </html>

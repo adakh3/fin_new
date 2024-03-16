@@ -67,45 +67,41 @@ class HandlePLData:
         Cleans the input data by removing NaN values, renaming columns, and selecting specific columns.
         """
 
-        try:
-            # Remove rows and columns with all NaNs
-            data = self.remove_nan_values(data)
+        # Remove rows and columns with all NaNs
+        data = self.remove_nan_values(data)
 
-            # Validate and rename columns
-            data = self.validate_and_rename_columns(data)
-            print('Data validated and renamed ' + str(datetime.now().time()))
+        # Validate and rename columns
+        data = self.validate_and_rename_columns(data)
+        print('Data validated and renamed ' + str(datetime.now().time()))
 
-            # Clean the 'Accounts' column
-            data = self.clean_accounts_column(data)
-            print('Accounts column cleaned ' + str(datetime.now().time()))
+        # Clean the 'Accounts' column
+        data = self.clean_accounts_column(data)
+        print('Accounts column cleaned ' + str(datetime.now().time()))
 
-            # Get dictionary of date columns
-            date_columns_dict = self.get_date_columns_dict(data)
-            # Remove key-value pairs where value is 'false'
-            #date_columns_dict = {key: value for key, value in date_columns_dict.items() if value}
-            self.dateColumnCount = len(date_columns_dict)
-            if self.dateColumnCount == 0:
-                raise Exception("File does not contain any valid accounting periods. Please upload a file with valid P&L data.")
+        # Get dictionary of date columns
+        date_columns_dict = self.get_date_columns_dict(data)
+        # Remove key-value pairs where value is 'false'
+        #date_columns_dict = {key: value for key, value in date_columns_dict.items() if value}
+        #self.dateColumnCount = len(date_columns_dict)
+        
+        # Get indices of columns with True values (date columns)
+        indices = self.get_true_indices(date_columns_dict)
+        self.dateColumnCount = len(indices)
+        if self.dateColumnCount == 0:
+            raise Exception("File does not contain any valid accounting periods. Make sure you have provided the correct row number.")
 
-            # Get indices of columns with True values (date columns)
-            indices = self.get_true_indices(date_columns_dict)
-            self.dateColumnCount = len(indices)
 
-            # Select and clean specific columns
-            data = self.select_baseline_columns(data, indices)
-            if data is None:
-                return None
-
-            print('Baseline columns selected and cleaned ' + str(datetime.now().time()))
-
-            # Store original column names
-            self.original_columns = data.columns.tolist()
-
-            return data
-
-        except Exception as e:
-            print(f"An error occurred while cleaning and preparing the data")
+        # Select and clean specific columns
+        data = self.select_baseline_columns(data, indices)
+        if data is None:
             return None
+
+        print('Baseline columns selected and cleaned ' + str(datetime.now().time()))
+
+        # Store original column names
+        self.original_columns = data.columns.tolist()
+
+        return data
 
 
     def remove_nan_values(self, data: pd.DataFrame) -> pd.DataFrame:
@@ -484,7 +480,7 @@ class HandlePLData:
 
         print('Data loaded ' + str(datetime.now().time()))
 
-        data = self.clean_and_prepare_data(data)        
+        data = self.clean_and_prepare_data(data)
         if data is None:
             raise Exception ('File does not contain valid data. Try opening your file in excel, saving it and then uploading it again.')
         
