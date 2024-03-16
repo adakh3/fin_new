@@ -31,6 +31,11 @@ class ChartManager:
         
         # Select the desired columns
         chart_df = filtered_df.iloc[:, [0] + list(range(1, date_column_count + 1))]
+
+        #sort values in desc order and pick top 15 only if more than 15
+        chart_df = chart_df.sort_values(by=chart_df.columns[-1], ascending=False) #sort by last column
+        if len(chart_df) > 10: #if more than 15 rows
+            chart_df = chart_df.iloc[:10] #pick top 15 rows
         
         return chart_df
     

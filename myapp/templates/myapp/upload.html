@@ -16,8 +16,8 @@
 </head>
 <body>
   <div class="container pt-5">
-    <h2> Relogue AI: Your In-house Financial Analyst<span class="badge badge-warning ml-2 align-middle">Beta</span> </h2>
-    <h4>A decidated financial analyst available to your business 24-7 </h4>
+    <h2> Relogue: Your AI Financial Analyst<span class="badge badge-warning ml-2 align-middle">Beta</span> </h2>
+    <h4>A decidated AI financial analyst available to your business 24-7 </h4>
     <p>To get instant insights, simply upload a Profit and Loss Statement from Quickbooks (in .xlsx format) for a single period, comparison with a previous period, or over several months.</p>
     <form id='yourFormId' method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
       {% csrf_token %}
@@ -39,7 +39,7 @@
       <div class="form-group">
         <label for="industry">Pick a relevant industry for more helpful insights</label>
         <select name="industry" id="industry-dropdown" class="form-control">
-          <option value="all" selected>None</option>
+          <option value="all" selected>Other</option>
           <option value="agriculture">Agriculture</option>
           <option value="artisanal_foods">Artisanal Foods</option>
           <option value="arts_crafts">Arts & Crafts</option>
