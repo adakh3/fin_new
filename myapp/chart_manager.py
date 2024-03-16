@@ -35,22 +35,25 @@ class ChartManager:
         return chart_df
     
 
-    def plot_stacked_bar_charts(self, df, chartTitle):
+    def plot_stacked_bar_charts(self, df, chartTitle, chartMode):
         # Prepare data for stacked bar chart
         data = []
         for i in range(len(df)):
             row_name = df.iloc[i, 0]
             values = df.iloc[i, 1:].astype(float).values
-            data.append(go.Bar(name=row_name, x=df.columns[1:], y=values, marker=dict(color=self.color_palette[i % len(self.color_palette)]), hoverinfo='y'))
-
+            data.append(go.Bar(name=row_name, x=df.columns[1:], 
+                               y=values, 
+                               marker=dict(color=self.color_palette[i % len(self.color_palette)]),
+                               hovertemplate=f'<b>{row_name}</b>: %{{y}}<extra></extra>'))
 
         # Create figure
         fig = go.Figure(data=data)
         print('chart data is', fig.data)
 
         fig.update_layout(
-        barmode='stack', 
+        #barmode='stack', 
         title = chartTitle,
+        barmode = chartMode,
         plot_bgcolor='rgba(0,0,0,0)',  # Set plot background color to transparent
         paper_bgcolor='rgba(0,0,0,0)',  # Set paper background color to transparent
         hoverlabel=dict(  # Customize hover label
@@ -59,12 +62,10 @@ class ChartManager:
                 font_color="white"  # Font color
             )
     )
-
         print('chart layout is', fig.layout)
-
-
         # Convert the figure to HTML and return it
         return [fig.to_html(full_html=False, config = self.config)]
+    
     
     def plot_bar_charts(self,df):
         charts = []

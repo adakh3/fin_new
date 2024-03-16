@@ -527,16 +527,16 @@ class HandlePLData:
         #get some KPI charts before adding anything else 
         if(insights_preference == 'Income'):
             charts_df = self.chart_manager.create_chart_dataframe(data,'Income', self.dateColumnCount)
-            self.charts = self.chart_manager.plot_stacked_bar_charts(charts_df, 'Income')
+            self.charts = self.chart_manager.plot_stacked_bar_charts(charts_df, 'Income', 'stack')
         elif(insights_preference == 'Cost of Sales'):
             charts_df = self.chart_manager.create_chart_dataframe(data,'Cost of Sales', self.dateColumnCount)
-            self.charts = self.chart_manager.plot_stacked_bar_charts(charts_df, 'Cost of Sales')
+            self.charts = self.chart_manager.plot_stacked_bar_charts(charts_df, 'Cost of Sales', 'stack' )
         elif(insights_preference == 'Expenses'):
             charts_df = self.chart_manager.create_chart_dataframe(data,'Expenses', self.dateColumnCount)
-            self.charts = self.chart_manager.plot_stacked_bar_charts(charts_df, 'Expenses')
+            self.charts = self.chart_manager.plot_stacked_bar_charts(charts_df, 'Expenses', 'stack' )
         else: #if its a general P&L analyis
             charts_df = self.chart_manager.create_chart_dataframe(data,'Key KPI', self.dateColumnCount)
-            self.charts = self.chart_manager.plot_bar_charts(charts_df)
+            self.charts = self.chart_manager.plot_stacked_bar_charts(charts_df, 'Key KPIs', 'group')
 
         print('content for charts is:',charts_df)
 
@@ -570,7 +570,7 @@ class HandlePLData:
         print('Data being sent to AI for analysis and interpretation ' + str(datetime.now().time()))
 
         aiResponse = None
-        aiResponse = self.get_AI_analysis(data, prompt_file_path, industry)
+        #aiResponse = self.get_AI_analysis(data, prompt_file_path, industry)
 
         print('Data returned from AI ' + str(datetime.now().time()))
         
