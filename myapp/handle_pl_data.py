@@ -10,6 +10,7 @@ import string
 import json
 from typing import List, Dict
 from .chart_manager import ChartManager
+from .find_interesting_things import FindInterestingThings
 
 ''' Overall separate out key KPIs, revenues, COGS, costs, other income and costs --- 
 one by one send these all to GPT-4 to get insights and predictions 
@@ -225,35 +226,7 @@ class HandlePLData:
             return data
 
 
-    def add_percent_sales(self, data: pd.DataFrame) -> pd.DataFrame:
-        """
-        Adds a '% of Sales' column for each non-NaN column in the original data.
-        """
-        try:
-            i = 0
-            for col in self.original_columns[1:]:
-                if not data[col].isna().all():
-                    data[f'% of Sales {col}'] = data[col] / self.total_sales[i]
-                    i += 1
-            return data
-        except Exception as e:
-            print('An error occurred while preparing data')
-            return data
 
-
-    def add_differences(self, data: pd.DataFrame) -> pd.DataFrame:
-        """
-        Adds a 'Difference' column for each non-NaN column in the original data, starting from the second non-NaN column.
-        """
-        try:
-            date_columns = [col for col in self.original_columns[1:] if not data[col].isna().all()]
-
-            for i in range(0, len(date_columns)-1):
-                data[f'Difference {date_columns[i]}'] = data[date_columns[i]] - data[date_columns[i+1]]
-            return data
-        except Exception as e:
-            print('An error occurred while preparing data')
-            return data
 
     '''
     #do not use this function at the moment 
@@ -515,7 +488,6 @@ class HandlePLData:
         '''
         elif(insights_preference == 'Cost of Sales'):
             data = self.select_data(data, ['Cost of Sales']) 
-        
         elif(insights_preference == 'Other Income(Loss)'):
             data = self.select_data(data, ['Other Income(Loss)'])
         elif(insights_preference == 'Other Expenses'):
@@ -540,13 +512,18 @@ class HandlePLData:
 
         print('content for charts is:',charts_df)
 
+
+        #find and add more analysis
+        analyser = FindInterestingThings(data, self.original_columns, self.total_sales)
+        data = analyser.add_differences
+        data = analyser.add_percent_sales
+        data = analyser.add_percentage_differences
+
         data = self.add_differences(data)
         print('Differences added ' + str(datetime.now().time()))
         
         data = self.add_percent_sales(data)
         print('Percent sales differences added ' + str(datetime.now().time()))
-
-        
 
         print('Number of rows in data: ', len(data))
         print('Number of columns in data: ', len(data.columns))
@@ -570,7 +547,7 @@ class HandlePLData:
         print('Data being sent to AI for analysis and interpretation ' + str(datetime.now().time()))
 
         aiResponse = None
-        aiResponse = self.get_AI_analysis(data, prompt_file_path, industry)
+        #aiResponse = self.get_AI_analysis(data, prompt_file_path, industry)
 
         print('Data returned from AI ' + str(datetime.now().time()))
         
