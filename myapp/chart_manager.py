@@ -27,20 +27,31 @@ class ChartManager:
         # Get the date column count
         
         # Filter the DataFrame based on the account_type
-        filtered_df = df[df['Account type'] == account_type]
+        #filtered_df = df[df['Account type'] == account_type]
+
+        print("Dataframe is", df.columns)
+        # Filter the DataFrame based on the account_type
+        if account_type == 'outliers':
+            filtered_df = df[df['outliers'] == True]
+        else:
+            filtered_df = df[df['Account type'] == account_type]
+        
+        print ("Fitered dataframe is" , filtered_df.columns)
         
         # Select the desired columns
         chart_df = filtered_df.iloc[:, [0] + list(range(1, date_column_count + 1))]
 
         #sort values in desc order and pick top 15 only if more than 15
-        chart_df = chart_df.sort_values(by=chart_df.columns[-1], ascending=False) #sort by last column
-        if len(chart_df) > 10: #if more than 15 rows
-            chart_df = chart_df.iloc[:10] #pick top 15 rows
+        chart_df = chart_df.sort_values(by=chart_df.columns[1], ascending=False) #sort by first values column
+        if len(chart_df) > 15: #if more than 15 rows
+            chart_df = chart_df.iloc[:15] #pick top 15 rows
+
+        print (df.head)
         
         return chart_df
     
 
-    def plot_stacked_bar_charts(self, df, chartTitle, chartMode):
+    def plot_diff_bar_charts(self, df, chartTitle, chartMode):
         # Prepare data for stacked bar chart
         data = []
         for i in range(len(df)):
@@ -70,6 +81,38 @@ class ChartManager:
         print('chart layout is', fig.layout)
         # Convert the figure to HTML and return it
         return [fig.to_html(full_html=False, config = self.config)]
+    
+
+    #To group the bars by row instead of by column
+    def plot_diff_bar_charts_by_rows(self, df, chartTitle, chartMode):
+        # Prepare data for stacked bar chart
+        data = []
+        for column in df.columns[1:]:
+            column_values = df[column].astype(float).values
+            data.append(go.Bar(name=column, x=df.iloc[:, 0], 
+                            y=column_values, 
+                            marker=dict(color=self.color_palette[df.columns.get_loc(column) % len(self.color_palette)]),
+                            hovertemplate=f'<b>{column}</b>: %{{y}}<extra></extra>'))
+
+        # Create figure
+        fig = go.Figure(data=data)
+        print('chart data is', fig.data)
+
+        fig.update_layout(
+            title = chartTitle,
+            barmode = chartMode,
+            plot_bgcolor='rgba(0,0,0,0)',  # Set plot background color to transparent
+            paper_bgcolor='rgba(0,0,0,0)',  # Set paper background color to transparent
+            hoverlabel=dict(  # Customize hover label
+                bgcolor="black",  # Background color
+                font_size=16,  # Font size
+                font_color="white"  # Font color
+            )
+        )
+        print('chart layout is', fig.layout)
+        # Convert the figure to HTML and return it
+        return [fig.to_html(full_html=False, config = self.config)]
+
     
     
     def plot_bar_charts(self,df):

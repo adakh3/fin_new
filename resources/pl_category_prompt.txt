@@ -21,6 +21,8 @@ and provide your insight as well.
 If there are any discrepencies in the data, or things you cant explain, point those out too. 
     
 Make sure to  look at all the columns in data for your analysis, especially percentage of sales
+Make sure you take into account the 'outliers' column and highlight where outliers are true. These will either be based on an extraordinary change in % value, or % of sales value
+
   
 Output  
 - Summarise the most critical bits, just the top 5 bits of overall importance

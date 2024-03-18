@@ -259,9 +259,14 @@ class HandlePLData:
             return data
         end_index = matching_rows_end.index[0] - 1
         
-        # Add the 'account type' column for the rows between start_index and end_index    
-        data.loc[start_index:end_index, 'Account type'] = accountType
-        data.loc[start_index:end_index, 'Account hierarchy'] = np.nan
+        # Add the 'account type' column for the rows between start_index and end_index
+        if(accountType == 'Other Income'):
+            data.loc[start_index:end_index, 'Account type'] = 'Income'    
+        elif( accountType == 'Other Expenses'):
+            data.loc[start_index:end_index, 'Account type'] = 'Expenses'
+        else:
+            data.loc[start_index:end_index, 'Account type'] = accountType
+            data.loc[start_index:end_index, 'Account hierarchy'] = np.nan
         
         # Set 'Account type' to none for rows where 'Accounts' contains 'total'
         mask = data['Accounts'].str.contains('total', case=False)
@@ -289,7 +294,7 @@ class HandlePLData:
 
     #analyse the data starting with revenues, gross proits, net profits and other KPIs, and then details 
     #send to AI for human language interpretation
-    def get_AI_analysis(self, data, prompt_file_path, industry):
+    def get_AI_analysis(self, data, prompt_file_path, industry, aiModel):
         #prompt2 gves much worse results - so I think my original prompt is better
         try:
             with open(prompt_file_path, 'r') as file: 
@@ -297,7 +302,7 @@ class HandlePLData:
             csv_text = data.to_csv(index=False)
         
             completion = self.client.chat.completions.create(
-                model = "gpt-4-turbo-preview",#"gpt-3.5-turbo",
+                model = aiModel,
                 seed=50,
                 messages=[
                     {"role": "system", "content": prompt},
@@ -496,35 +501,72 @@ class HandlePLData:
             data = self.select_data(data, ['Key KPI'])
         '''
 
-        #get some KPI charts before adding anything else 
-        if(insights_preference == 'Income'):
-            charts_df = self.chart_manager.create_chart_dataframe(data,'Income', self.dateColumnCount)
-            self.charts = self.chart_manager.plot_stacked_bar_charts(charts_df, 'Top 10 Revenue Lines', 'stack')
-        elif(insights_preference == 'Cost of Sales'):
-            charts_df = self.chart_manager.create_chart_dataframe(data,'Cost of Sales', self.dateColumnCount)
-            self.charts = self.chart_manager.plot_stacked_bar_charts(charts_df, 'Top 10 Cost of Sales', 'stack' )
-        elif(insights_preference == 'Expenses'):
-            charts_df = self.chart_manager.create_chart_dataframe(data,'Expenses', self.dateColumnCount)
-            self.charts = self.chart_manager.plot_stacked_bar_charts(charts_df, 'Top 10 Expenses', 'stack' )
-        else: #if its a general P&L analyis
-            charts_df = self.chart_manager.create_chart_dataframe(data,'Key KPI', self.dateColumnCount)
-            self.charts = self.chart_manager.plot_stacked_bar_charts(charts_df, 'Key KPIs', 'group')
 
-        print('content for charts is:',charts_df)
 
 
         #find and add more analysis
         analyser = FindInterestingThings(data, self.original_columns, self.total_sales)
-        data = analyser.add_differences
-        data = analyser.add_percent_sales
-        data = analyser.add_percentage_differences
+        data = analyser.add_differences()
+        data = analyser.add_percent_sales()
+        data = analyser.add_percentage_differences()
+        data = analyser.add_percent_sales_differences()
 
-        data = self.add_differences(data)
-        print('Differences added ' + str(datetime.now().time()))
+        #if its a comparison only of two periods, find outliers in the data
+        if(self.dateColumnCount == 2):
+            data = analyser.find_column_outliers('% Difference','Income')
+            data = analyser.find_column_outliers('Percentage of Sales Difference', 'Cost of Sales')
+            data = analyser.find_column_outliers('% Difference','Expenses')
+            data = analyser.find_column_outliers('% Difference','Key KPI')
+
+        #get some KPI charts before adding anything else 
+        if(insights_preference == 'Income'):
+            charts_df = self.chart_manager.create_chart_dataframe(data,'Income', self.dateColumnCount)
+            self.charts = self.chart_manager.plot_diff_bar_charts(charts_df, 'Top Revenue Accounts', 'stack')
+            #add outliers column back by joining with data on accounts
+            charts_df = pd.merge(charts_df, data[['Accounts', 'outliers']], on='Accounts', how='left')
+            charts_df = self.chart_manager.create_chart_dataframe(charts_df,'outliers', self.dateColumnCount)
+            if(charts_df is not None):
+                chart_html = self.chart_manager.plot_diff_bar_charts_by_rows(charts_df, 'Top Accounts With Surprising Changes', 'group')[0]
+                self.charts.append(chart_html)            
+
+
+
+        elif(insights_preference == 'Cost of Sales'):
+            charts_df = self.chart_manager.create_chart_dataframe(data,'Cost of Sales', self.dateColumnCount)
+            self.charts = self.chart_manager.plot_diff_bar_charts(charts_df, 'Top Cost of Sales Accounts', 'stack' )
+            #add outliers column back by joining with data on accounts
+            charts_df = pd.merge(charts_df, data[['Accounts', 'outliers']], on='Accounts', how='left')
+            charts_df = self.chart_manager.create_chart_dataframe(charts_df,'outliers', self.dateColumnCount)   
+            if(charts_df is not None):
+                chart_html = self.chart_manager.plot_diff_bar_charts_by_rows(charts_df, 'Top Accounts With Surprising Changes', 'group')[0]
+                self.charts.append(chart_html)            
+    
+
+
+        elif(insights_preference == 'Expenses'):
+            charts_df = self.chart_manager.create_chart_dataframe(data,'Expenses', self.dateColumnCount)
+            self.charts = self.chart_manager.plot_diff_bar_charts(charts_df, 'Top Expense Accounts', 'stack' )
+            #add outliers column back by joining with data on accounts
+            charts_df = pd.merge(charts_df, data[['Accounts', 'outliers']], on='Accounts', how='left')
+            charts_df = self.chart_manager.create_chart_dataframe(charts_df,'outliers', self.dateColumnCount)
+            if(charts_df is not None):
+                chart_html = self.chart_manager.plot_diff_bar_charts_by_rows(charts_df, 'Top Accounts With Surprising Changes', 'group')[0]
+                self.charts.append(chart_html)             
+
+        else: #if its a general P&L analyis
+            charts_df = self.chart_manager.create_chart_dataframe(data,'Key KPI', self.dateColumnCount)
+            self.charts = self.chart_manager.plot_diff_bar_charts_by_rows(charts_df, 'Key KPIs', 'group')    
+            #add an outliers chart
+            charts_df = self.chart_manager.create_chart_dataframe(data,'outliers', self.dateColumnCount)
+            if(charts_df is not None):
+                chart_html = self.chart_manager.plot_diff_bar_charts_by_rows(charts_df, 'Top Accounts With Surprising Changes', 'group')[0]
+                self.charts.append(chart_html)
+
+
+        print('content for charts is:',charts_df)
+
+        print('Outliers analysis done ' + str(datetime.now().time()))
         
-        data = self.add_percent_sales(data)
-        print('Percent sales differences added ' + str(datetime.now().time()))
-
         print('Number of rows in data: ', len(data))
         print('Number of columns in data: ', len(data.columns))
 
@@ -547,7 +589,7 @@ class HandlePLData:
         print('Data being sent to AI for analysis and interpretation ' + str(datetime.now().time()))
 
         aiResponse = None
-        #aiResponse = self.get_AI_analysis(data, prompt_file_path, industry)
+        aiResponse = self.get_AI_analysis(data, prompt_file_path, industry,"gpt-4-turbo-preview" )# "gpt-3.5-turbo"
 
         print('Data returned from AI ' + str(datetime.now().time()))
         
