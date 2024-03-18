@@ -69,6 +69,7 @@ class ChartManager:
         fig.update_layout(
         #barmode='stack', 
         title = chartTitle,
+        dragmode = False,
         barmode = chartMode,
         plot_bgcolor='rgba(0,0,0,0)',  # Set plot background color to transparent
         paper_bgcolor='rgba(0,0,0,0)',  # Set paper background color to transparent
@@ -100,6 +101,7 @@ class ChartManager:
 
         fig.update_layout(
             title = chartTitle,
+            dragmode = False,
             barmode = chartMode,
             plot_bgcolor='rgba(0,0,0,0)',  # Set plot background color to transparent
             paper_bgcolor='rgba(0,0,0,0)',  # Set paper background color to transparent
@@ -130,6 +132,7 @@ class ChartManager:
                 title=df.iloc[i, 0],
                 plot_bgcolor='rgba(0,0,0,0)',  # Set plot background color to transparent
                 paper_bgcolor='rgba(0,0,0,0)',  # Set paper background color to transparent
+                dragmode = False,
                 showlegend=False,  # Hide the legend
                 hoverlabel=dict(  # Customize hover label
                     bgcolor="black",  # Background color

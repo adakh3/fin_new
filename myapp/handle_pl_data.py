@@ -501,22 +501,21 @@ class HandlePLData:
             data = self.select_data(data, ['Key KPI'])
         '''
 
-
-
-
-        #find and add more analysis
-        analyser = FindInterestingThings(data, self.original_columns, self.total_sales)
-        data = analyser.add_differences()
-        data = analyser.add_percent_sales()
-        data = analyser.add_percentage_differences()
-        data = analyser.add_percent_sales_differences()
-
         #if its a comparison only of two periods, find outliers in the data
         if(self.dateColumnCount == 2):
+            #find and add more analysis
+            analyser = FindInterestingThings(data, self.original_columns, self.total_sales)
+            data = analyser.add_differences()
+            data = analyser.add_percent_sales()
+            data = analyser.add_percentage_differences()
+            data = analyser.add_percent_sales_differences()
+
             data = analyser.find_column_outliers('% Difference','Income')
             data = analyser.find_column_outliers('Percentage of Sales Difference', 'Cost of Sales')
             data = analyser.find_column_outliers('% Difference','Expenses')
             data = analyser.find_column_outliers('% Difference','Key KPI')
+
+        data ['outliers'] = False
 
         #get some KPI charts before adding anything else 
         if(insights_preference == 'Income'):
@@ -526,7 +525,7 @@ class HandlePLData:
             charts_df = pd.merge(charts_df, data[['Accounts', 'outliers']], on='Accounts', how='left')
             charts_df = self.chart_manager.create_chart_dataframe(charts_df,'outliers', self.dateColumnCount)
             if(not charts_df.empty):
-                chart_html = self.chart_manager.plot_diff_bar_charts_by_rows(charts_df, 'Most Signifcant Outliers', 'group')[0]
+                chart_html = self.chart_manager.plot_diff_bar_charts_by_rows(charts_df, 'Signifcant Outliers', 'group')[0]
                 self.charts.append(chart_html)            
 
         elif(insights_preference == 'Cost of Sales'):
@@ -536,7 +535,7 @@ class HandlePLData:
             charts_df = pd.merge(charts_df, data[['Accounts', 'outliers']], on='Accounts', how='left')
             charts_df = self.chart_manager.create_chart_dataframe(charts_df,'outliers', self.dateColumnCount)   
             if(not charts_df.empty):
-                chart_html = self.chart_manager.plot_diff_bar_charts_by_rows(charts_df, 'Most Significant Outliers', 'group')[0]
+                chart_html = self.chart_manager.plot_diff_bar_charts_by_rows(charts_df, 'Significant Outliers', 'group')[0]
                 self.charts.append(chart_html)            
 
         elif(insights_preference == 'Expenses'):
@@ -546,7 +545,7 @@ class HandlePLData:
             charts_df = pd.merge(charts_df, data[['Accounts', 'outliers']], on='Accounts', how='left')
             charts_df = self.chart_manager.create_chart_dataframe(charts_df,'outliers', self.dateColumnCount)
             if(not charts_df.empty):
-                chart_html = self.chart_manager.plot_diff_bar_charts_by_rows(charts_df, 'Most Significant Outliers', 'group')[0]
+                chart_html = self.chart_manager.plot_diff_bar_charts_by_rows(charts_df, 'Significant Outliers', 'group')[0]
                 self.charts.append(chart_html)             
 
         else: #if its a general P&L analyis
@@ -555,7 +554,7 @@ class HandlePLData:
             #add an outliers chart
             charts_df = self.chart_manager.create_chart_dataframe(data,'outliers', self.dateColumnCount)
             if(not charts_df.empty):
-                chart_html = self.chart_manager.plot_diff_bar_charts_by_rows(charts_df, 'Most Significant Outliers', 'group')[0]
+                chart_html = self.chart_manager.plot_diff_bar_charts_by_rows(charts_df, 'Significant Outliers', 'group')[0]
                 self.charts.append(chart_html)
 
 
@@ -585,7 +584,7 @@ class HandlePLData:
         print('Data being sent to AI for analysis and interpretation ' + str(datetime.now().time()))
 
         aiResponse = None
-        aiResponse = self.get_AI_analysis(data, prompt_file_path, industry,"gpt-4-turbo-preview" )# "gpt-3.5-turbo"
+        aiResponse = self.get_AI_analysis(data, prompt_file_path, industry,"gpt-3.5-turbo")#"gpt-4-turbo-preview"  
 
         print('Data returned from AI ' + str(datetime.now().time()))
         

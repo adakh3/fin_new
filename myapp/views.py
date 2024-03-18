@@ -13,21 +13,33 @@ def upload_file_view(request):
     #by default this should show the html file in my templates folder called upload.html
     context = {}
     if request.method == 'POST':
-        form = UploadFileForm(request.POST, request.FILES)
-        if form.is_valid():
-            try:
-                row_number = int(request.POST['row_number'])  # Get the row_number field
-                response, charts = handle_file(request.FILES['file'], request, row_number )
-            except Exception as e:
-                context['error'] = f'{e}'
-                return render(request, 'myapp/upload.html', context)
-            
-            print('Form submitted')
-            return render(request, 'myapp/upload.html', {'form': form, 'message': response, 'charts': charts})
-    else:
-        form = UploadFileForm()
-    return render(request, 'myapp/upload.html', {'form': form})
+        try:
+            row_number = int(request.POST['row_number'])  # Get the row_number field
+            response, charts = handle_file(request.FILES['file'], request, row_number )
+        except Exception as e:
+            context['error'] = f'{e}'
+            return render(request, 'myapp/upload.html', context)
+        
+        print('Form submitted')
+        return render(request, 'myapp/upload.html', {'message': response, 'charts': charts})
+    return render(request, 'myapp/upload.html')
 
+    '''
+    form = UploadFileForm(request.POST, request.FILES)
+    if form.is_valid():
+        try:
+            row_number = int(request.POST['row_number'])  # Get the row_number field
+            response, charts = handle_file(request.FILES['file'], request, row_number )
+        except Exception as e:
+            context['error'] = f'{e}'
+            return render(request, 'myapp/upload.html', context)
+        
+        print('Form submitted')
+        return render(request, 'myapp/upload.html', {'form': form, 'message': response, 'charts': charts})
+else:
+    form = UploadFileForm()
+return render(request, 'myapp/upload.html', {'form': form})
+'''
 
 def file_sanitiser(f, max_size=5000000):
 
