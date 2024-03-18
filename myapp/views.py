@@ -6,26 +6,40 @@ from .handle_pl_data import HandlePLData
 from django.http import JsonResponse
 import pandas as pd
 import mimetypes
+from .text_formatter import TextFormatter
 
 
 def upload_file_view(request):
     #by default this should show the html file in my templates folder called upload.html
     context = {}
     if request.method == 'POST':
-        form = UploadFileForm(request.POST, request.FILES)
-        if form.is_valid():
-            try:
-                response = handle_file(request.FILES['file'], request )
-            except Exception as e:
-                context['error'] = f'{e}'
-                return render(request, 'myapp/upload.html', context)
-            
-            print('Form submitted')
-            return render(request, 'myapp/upload.html', {'form': form, 'message': response})
-    else:
-        form = UploadFileForm()
-    return render(request, 'myapp/upload.html', {'form': form})
+        try:
+            row_number = int(request.POST['row_number'])  # Get the row_number field
+            response, charts = handle_file(request.FILES['file'], request, row_number )
+        except Exception as e:
+            context['error'] = f'{e}'
+            return render(request, 'myapp/upload.html', context)
+        
+        print('Form submitted')
+        return render(request, 'myapp/upload.html', {'message': response, 'charts': charts})
+    return render(request, 'myapp/upload.html')
 
+    '''
+    form = UploadFileForm(request.POST, request.FILES)
+    if form.is_valid():
+        try:
+            row_number = int(request.POST['row_number'])  # Get the row_number field
+            response, charts = handle_file(request.FILES['file'], request, row_number )
+        except Exception as e:
+            context['error'] = f'{e}'
+            return render(request, 'myapp/upload.html', context)
+        
+        print('Form submitted')
+        return render(request, 'myapp/upload.html', {'form': form, 'message': response, 'charts': charts})
+else:
+    form = UploadFileForm()
+return render(request, 'myapp/upload.html', {'form': form})
+'''
 
 def file_sanitiser(f, max_size=5000000):
 
@@ -56,7 +70,7 @@ def file_sanitiser(f, max_size=5000000):
     return True
 
 
-def handle_file(f, request):
+def handle_file(f, request, row_number):
 #if the file is an excel file, then we upload it and start, else send an error message
     
     try:
@@ -78,10 +92,12 @@ def handle_file(f, request):
     
     #call the main method of the HandlePLData class
     try:
-        results = my_object.main(request.POST['insights'], request.POST['industry'])
+        results = my_object.main(request.POST['insights'], request.POST['industry'], row_number)
+        if(results is not None):
+            results = TextFormatter.convert_markdown_to_html(results)
     except Exception as e:
         raise ValueError(str(e)) from e
 
     #else:
-    return my_object.main(request.POST['insights'], request.POST['industry'])
+    return results, my_object.charts
 
