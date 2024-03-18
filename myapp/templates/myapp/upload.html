@@ -23,7 +23,7 @@
       {% csrf_token %}
       {{ form.as_p }}
       <div class="form-group">
-        <label for="row_number">Could you tell us the row number where your column titles are? This is where your data begins in the Excel file.</label>
+        <label for="row_number">Could you tell us the row number where your column titles are? This is where your data begins in the Excel file. (Required)</label>
         <input type="number" id="row_number" name="row_number" min="1" class="form-control" required>
       </div>
       <div class="form-group">
@@ -116,6 +116,29 @@
     </div>
   </div>
   <script>
+
+    var uploadButton = document.getElementById('uploadButton');
+    var fileInput = document.getElementById('id_file'); // Assuming 'id_file' is the id of your file input field
+    var rowNumberInput = document.getElementById('row_number');
+
+    function checkInputs() {
+      var file = fileInput.files[0];
+      var rowNumber = rowNumberInput.value;
+      if (file && rowNumber) {
+        uploadButton.disabled = false;
+      } else {
+        uploadButton.disabled = true;
+      }
+    }
+
+  fileInput.addEventListener('change', checkInputs);
+  rowNumberInput.addEventListener('input', checkInputs);
+
+  // Call checkInputs to set the initial state of the button
+  checkInputs();
+
+
+
     document.getElementById('yourFormId').addEventListener('submit', function() {
       document.getElementById('loading').style.display = 'block';
     });

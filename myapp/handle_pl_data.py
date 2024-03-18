@@ -526,7 +526,7 @@ class HandlePLData:
             charts_df = pd.merge(charts_df, data[['Accounts', 'outliers']], on='Accounts', how='left')
             charts_df = self.chart_manager.create_chart_dataframe(charts_df,'outliers', self.dateColumnCount)
             if(not charts_df.empty):
-                chart_html = self.chart_manager.plot_diff_bar_charts_by_rows(charts_df, 'Top Accounts With Surprising Changes', 'group')[0]
+                chart_html = self.chart_manager.plot_diff_bar_charts_by_rows(charts_df, 'Most Signifcant Outliers', 'group')[0]
                 self.charts.append(chart_html)            
 
         elif(insights_preference == 'Cost of Sales'):
@@ -536,7 +536,7 @@ class HandlePLData:
             charts_df = pd.merge(charts_df, data[['Accounts', 'outliers']], on='Accounts', how='left')
             charts_df = self.chart_manager.create_chart_dataframe(charts_df,'outliers', self.dateColumnCount)   
             if(not charts_df.empty):
-                chart_html = self.chart_manager.plot_diff_bar_charts_by_rows(charts_df, 'Top Accounts With Surprising Changes', 'group')[0]
+                chart_html = self.chart_manager.plot_diff_bar_charts_by_rows(charts_df, 'Most Significant Outliers', 'group')[0]
                 self.charts.append(chart_html)            
 
         elif(insights_preference == 'Expenses'):
@@ -546,7 +546,7 @@ class HandlePLData:
             charts_df = pd.merge(charts_df, data[['Accounts', 'outliers']], on='Accounts', how='left')
             charts_df = self.chart_manager.create_chart_dataframe(charts_df,'outliers', self.dateColumnCount)
             if(not charts_df.empty):
-                chart_html = self.chart_manager.plot_diff_bar_charts_by_rows(charts_df, 'Top Accounts With Surprising Changes', 'group')[0]
+                chart_html = self.chart_manager.plot_diff_bar_charts_by_rows(charts_df, 'Most Significant Outliers', 'group')[0]
                 self.charts.append(chart_html)             
 
         else: #if its a general P&L analyis
@@ -555,7 +555,7 @@ class HandlePLData:
             #add an outliers chart
             charts_df = self.chart_manager.create_chart_dataframe(data,'outliers', self.dateColumnCount)
             if(not charts_df.empty):
-                chart_html = self.chart_manager.plot_diff_bar_charts_by_rows(charts_df, 'Top Accounts With Surprising Changes', 'group')[0]
+                chart_html = self.chart_manager.plot_diff_bar_charts_by_rows(charts_df, 'Most Significant Outliers', 'group')[0]
                 self.charts.append(chart_html)
 
 
