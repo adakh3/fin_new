@@ -129,3 +129,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 ALLOWED_HOSTS = ['sea-turtle-app-dr5wz.ondigitalocean.app', 'www.relogue.com', 'relogue.com', 'localhost']
+
+LOGIN_URL = '/login/'
+LOGOUT_REDIRECT_URL = '/after-logout/'
+LOGIN_REDIRECT_URL = 'home'
