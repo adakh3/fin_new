@@ -515,7 +515,7 @@ class HandlePLData:
             data = analyser.find_column_outliers('% Difference','Expenses')
             data = analyser.find_column_outliers('% Difference','Key KPI')
 
-        data ['outliers'] = False
+        #data ['outliers'] = False
 
         #get some KPI charts before adding anything else 
         if(insights_preference == 'Income'):
@@ -584,7 +584,7 @@ class HandlePLData:
         print('Data being sent to AI for analysis and interpretation ' + str(datetime.now().time()))
 
         aiResponse = None
-        aiResponse = self.get_AI_analysis(data, prompt_file_path, industry,"gpt-3.5-turbo")#"gpt-4-turbo-preview"  
+        aiResponse = self.get_AI_analysis(data, prompt_file_path, industry,"gpt-4-turbo-preview")#"gpt-3.5-turbo"  
 
         print('Data returned from AI ' + str(datetime.now().time()))
         
