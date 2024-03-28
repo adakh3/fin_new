@@ -128,6 +128,8 @@
         <p id="outputMessage"></p>
       {% endif %}
     </div>
+
+    <button id="copyButton" class="btn btn-secondary">Copy Output</button>
   </div>
   <script>
 
@@ -157,6 +159,38 @@
       document.getElementById('loading').style.display = 'block';
     });
     </script>
+
+
+<script>
+  var uploadButton = document.getElementById('uploadButton');
+  var copyButton = document.getElementById('copyButton');
+  var fileInput = document.getElementById('id_file'); // Assuming 'id_file' is the id of your file input field
+  var rowNumberInput = document.getElementById('row_number');
+
+  function checkInputs() {
+    var file = fileInput.files[0];
+    var rowNumber = rowNumberInput.value;
+    if (file && rowNumber) {
+      uploadButton.disabled = false;
+    } else {
+      uploadButton.disabled = true;
+    }
+  }
+
+  // Assuming you're using AJAX to submit the form
+  $('#yourForm').on('submit', function(e) {
+    e.preventDefault();
+    // Your AJAX request here
+    $.ajax({
+      // ...
+      success: function(response) {
+        // Enable the copy button after successful form submission
+        copyButton.disabled = false;
+      }
+    });
+  });
+  </script>
+
 
 </body>
 
