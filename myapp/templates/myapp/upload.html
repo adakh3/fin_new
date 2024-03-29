@@ -115,7 +115,7 @@
     {% if error %}
     <p class="error">{{ error }}</p>
     {% endif %}
-    <div class="output-box p-3 mb-2 bg-light text-dark border d-flex flex-column" style="min-height: 50vh;">
+    <div id='aioutput'class="output-box p-3 mb-2 bg-light text-dark border d-flex flex-column" style="min-height: 50vh;">
       <div id="loading" style="display: none;">Analysing your data. This may take a few seconds. Please do not refresh the browser...</div>
       {% if charts %}
       {% for chart in charts %}
@@ -129,7 +129,7 @@
       {% endif %}
     </div>
 
-    <button id="copyButton" class="btn btn-secondary">Copy Output</button>
+    <!--<button id="copyButton" class="btn btn-secondary">Copy Analysis</button> -->
   </div>
   <script>
 
@@ -163,9 +163,30 @@
 
 <script>
   var uploadButton = document.getElementById('uploadButton');
-  var copyButton = document.getElementById('copyButton');
   var fileInput = document.getElementById('id_file'); // Assuming 'id_file' is the id of your file input field
   var rowNumberInput = document.getElementById('row_number');
+
+  var copyButton = document.getElementById('copyButton');
+  var outputMessage = document.getElementById('outputMessage');
+
+  copyButton.addEventListener("click", function() {
+    var text = document.getElementById("aioutput").innerText;
+    var textarea = document.createElement("textarea");
+    textarea.textContent = text;
+    textarea.style.position = "fixed"; // Prevent scrolling to bottom of page in MS Edge.
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+        return document.execCommand("copy"); // Security exception may be thrown by some browsers.
+        alert('Analysis copied to clipboard');
+
+    } catch (ex) {
+        console.warn("Copy to clipboard failed.", ex);
+        return false;
+    } finally {
+        document.body.removeChild(textarea);
+    }
+}, false);
 
   function checkInputs() {
     var file = fileInput.files[0];
