@@ -489,6 +489,7 @@ class HandlePLData:
         if data is None:
             raise Exception ('File does not contain valid data. Try opening your file in excel, saving it and then uploading it again.')
         
+        data['outliers'] = False
         print('Data cleaned and prepared ' + str(datetime.now().time()))
         
         #todo: refactor this 
@@ -517,18 +518,8 @@ class HandlePLData:
         else:
             data = self.select_data(data, 'All')
         
-        '''
-        elif(insights_preference == 'Cost of Sales'):
-            data = self.select_data(data, ['Cost of Sales']) 
-        elif(insights_preference == 'Other Income(Loss)'):
-            data = self.select_data(data, ['Other Income(Loss)'])
-        elif(insights_preference == 'Other Expenses'):
-            data = self.select_data(data, ['Other Expenses'])
-        elif(insights_preference == 'Key KPI'):
-            data = self.select_data(data, ['Key KPI'])
-        '''
-
         #if its a comparison only of two periods, find outliers in the data
+        
         if(self.dateColumnCount == 2):
             #find and add more analysis
             analyser = FindInterestingThings(data, self.original_columns, self.total_sales)
