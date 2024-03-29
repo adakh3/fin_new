@@ -57,7 +57,7 @@ class FindInterestingThings:
             i = 0
             for col in self.original_columns[1:]:
                 if not self.data[col].isna().all():
-                    self.data[f'% of Sales {col}'] = (self.data[col] / self.total_sales[i]) * 100
+                    self.data[f'% of Sales {col}'] = round((self.data[col] / self.total_sales[i]) * 100,1)
                     i += 1
             return self.data
         except Exception as e:
@@ -74,7 +74,7 @@ class FindInterestingThings:
             for i, col in enumerate(self.original_columns[1:], start=1):
                 if i < len(self.original_columns) - 1:  # check if there's a next column
                     next_col = self.original_columns[i+1]
-                    self.data[f'Percentage of Sales Difference {col}'] = (self.data[col]/self.total_sales[totSalesIndex] - self.data[next_col]/self.total_sales[totSalesIndex+1])*100
+                    self.data[f'Percentage of Sales Difference {col}'] = round((self.data[col]/self.total_sales[totSalesIndex] - self.data[next_col]/self.total_sales[totSalesIndex+1])*100,1)
                 totSalesIndex += 1
             return self.data
         except Exception as e:
@@ -105,28 +105,9 @@ class FindInterestingThings:
             date_columns = [col for col in self.original_columns[1:] if not self.data[col].isna().all()]
 
             for i in range(0, len(date_columns)-1):
-                self.data[f'% Difference {date_columns[i]}'] = (self.data[date_columns[i]] - self.data[date_columns[i+1]]) / self.data[date_columns[i+1]] * 100
+                self.data[f'% Difference {date_columns[i]}'] = round((self.data[date_columns[i]] - self.data[date_columns[i+1]]) / self.data[date_columns[i+1]] * 100,1)
             return self.data
         except Exception as e:
             print('An error occurred while preparing data')
             return self.data
         
-
-
-    '''
-    # Example usage
-    data = {'Name': ['John', 'Jane', 'Mike', 'Emily', 'David'],
-            'Age': [25, 30, 35, 40, 45],
-            'Salary': [50000, 60000, 70000, 80000, 90000]}
-    df = pd.DataFrame(data)
-
-    finder = FindInterestingThings(df)
-    outliers = finder.find_outliers('Salary')
-    patterns = finder.find_patterns('Age')
-
-    print("Outliers:")
-    print(outliers)
-
-    print("\nPatterns:")
-    print(patterns)
-    '''

@@ -198,6 +198,10 @@ class HandlePLData:
 
             if (dataDates.isna() | (dataDates == 0)).all().all():
                 return None
+            
+            for col in dataDates.columns:
+                dataDates[col] = dataDates[col].apply(lambda x: f'{x:,.2f}' if x >= 0 else f'({abs(x):,.2f})')
+
             data_mask = data.iloc[:, [0] + indices]
             return data[data_mask.columns]
         except Exception as e:
