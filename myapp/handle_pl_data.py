@@ -11,6 +11,7 @@ import json
 from typing import List, Dict
 from .chart_manager import ChartManager
 from .find_interesting_things import FindInterestingThings
+import anthropic
 
 ''' Overall separate out key KPIs, revenues, COGS, costs, other income and costs --- 
 one by one send these all to GPT-4 to get insights and predictions 
@@ -21,6 +22,7 @@ class HandlePLData:
 
     client = OpenAI()
     openai.api_key = os.getenv('OPENAI_API_KEY')
+
     dateColumnCount = 0
     total_sales = []
     original_columns = []
@@ -294,7 +296,7 @@ class HandlePLData:
 
     #analyse the data starting with revenues, gross proits, net profits and other KPIs, and then details 
     #send to AI for human language interpretation
-    def get_AI_analysis(self, data, prompt_file_path, industry, aiModel):
+    def get_openai_analysis(self, data, prompt_file_path, industry, aiModel):
         #prompt2 gves much worse results - so I think my original prompt is better
         try:
             with open(prompt_file_path, 'r') as file: 
@@ -313,7 +315,32 @@ class HandlePLData:
         except Exception as e:
             print(f"Error occurred during AI analysis")
             return None
+        
 
+    def get_anthropic_analysis(self, data, prompt_file_path, industry, aiModel):
+        try:
+            with open(prompt_file_path, 'r') as file: 
+                prompt = file.read()
+            csv_text = data.to_csv(index=False)
+
+            client = anthropic.Anthropic(
+            # defaults to os.environ.get("ANTHROPIC_API_KEY")
+            api_key=os.getenv('ANTHROPIC_API_KEY'),)
+            message = client.messages.create(
+                model=aiModel,
+                max_tokens=1024,
+                system = prompt,
+                messages=[
+                    {"role": "user", "content": f"Here is a CSV dataset:\n{csv_text}\nNow, perform some analysis on this data. This is from {industry} industry for more context"}
+                ]
+            )
+            print(message.content[0].text)
+            return message.content[0].text
+        except Exception as e:
+            print("Error occurred during AI analysis")
+            print("Error is:", e)
+            return None
+        
 
     #get a list of column headers from the data - call this on cleaned data
     def get_column_headers(self, data):
@@ -584,9 +611,9 @@ class HandlePLData:
         print('Data being sent to AI for analysis and interpretation ' + str(datetime.now().time()))
 
         aiResponse = None
-        aiResponse = self.get_AI_analysis(data, prompt_file_path, industry,"gpt-4-turbo-preview")#"gpt-3.5-turbo"  
+        #aiResponse = self.get_openai_analysis(data, prompt_file_path, industry,"gpt-4-turbo-preview")#"gpt-3.5-turbo"  
+        aiResponse = self.get_anthropic_analysis(data, prompt_file_path, industry,"claude-3-haiku-20240307")#"gpt-3.5-turbo"  
 
         print('Data returned from AI ' + str(datetime.now().time()))
         
         return aiResponse
-

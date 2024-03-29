@@ -25,7 +25,7 @@ Make sure you take into account the 'outliers' column and highlight where outlie
   
 Output  
 - Summarise the most critical bits, just the top 5 bits of overall importance
-- Also provide an html formatted table with the most important numbers
+- Also provide an html formatted table with the most important numbers (use html table tag)
 
 Structure your response with headings and formating, suiteable for a business report, and 
 suitable for html rendering. Headings will be <h3> and <h4> tags. No markdown format.
