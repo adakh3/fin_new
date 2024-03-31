@@ -129,8 +129,10 @@
       {% endif %}
     </div>
 
-    <!--<button id="copyButton" class="btn btn-secondary">Copy Analysis</button> -->
+    <!--<button id="savePdfButton" class="btn btn-secondary">Save as PDF</button>-->
   </div>
+
+
   <script>
 
     var uploadButton = document.getElementById('uploadButton');
@@ -147,69 +149,79 @@
       }
     }
 
-  fileInput.addEventListener('change', checkInputs);
-  rowNumberInput.addEventListener('input', checkInputs);
+    fileInput.addEventListener('change', checkInputs);
+    rowNumberInput.addEventListener('input', checkInputs);
 
-  // Call checkInputs to set the initial state of the button
-  checkInputs();
-
-
+    // Call checkInputs to set the initial state of the button
+    checkInputs();
 
     document.getElementById('yourFormId').addEventListener('submit', function() {
       document.getElementById('loading').style.display = 'block';
     });
-    </script>
 
+    var uploadButton = document.getElementById('uploadButton');
+    var fileInput = document.getElementById('id_file'); // Assuming 'id_file' is the id of your file input field
+    var rowNumberInput = document.getElementById('row_number');
 
-<script>
-  var uploadButton = document.getElementById('uploadButton');
-  var fileInput = document.getElementById('id_file'); // Assuming 'id_file' is the id of your file input field
-  var rowNumberInput = document.getElementById('row_number');
+    var outputMessage = document.getElementById('outputMessage');
 
-  var copyButton = document.getElementById('copyButton');
-  var outputMessage = document.getElementById('outputMessage');
-
-  copyButton.addEventListener("click", function() {
-    var text = document.getElementById("aioutput").innerText;
-    var textarea = document.createElement("textarea");
-    textarea.textContent = text;
-    textarea.style.position = "fixed"; // Prevent scrolling to bottom of page in MS Edge.
-    document.body.appendChild(textarea);
-    textarea.select();
-    try {
-        return document.execCommand("copy"); // Security exception may be thrown by some browsers.
-        alert('Analysis copied to clipboard');
-
-    } catch (ex) {
-        console.warn("Copy to clipboard failed.", ex);
-        return false;
-    } finally {
-        document.body.removeChild(textarea);
+    function checkInputs() {
+      var file = fileInput.files[0];
+      var rowNumber = rowNumberInput.value;
+      if (file && rowNumber) {
+        uploadButton.disabled = false;
+      } else {
+        uploadButton.disabled = true;
+      }
     }
-}, false);
 
-  function checkInputs() {
-    var file = fileInput.files[0];
-    var rowNumber = rowNumberInput.value;
-    if (file && rowNumber) {
-      uploadButton.disabled = false;
-    } else {
-      uploadButton.disabled = true;
+  function getCookie(name) {
+  var cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    var cookies = document.cookie.split(';');
+    for (var i = 0; i < cookies.length; i++) {
+      var cookie = cookies[i].trim();
+      // Does this cookie string begin with the name we want?
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
     }
   }
+  return cookieValue;
+}
 
-  // Assuming you're using AJAX to submit the form
-  $('#yourForm').on('submit', function(e) {
-    e.preventDefault();
-    // Your AJAX request here
-    $.ajax({
-      // ...
-      success: function(response) {
-        // Enable the copy button after successful form submission
-        copyButton.disabled = false;
-      }
-    });
+    //Save PDF button function - to complete later
+    document.getElementById('savePdfButton').addEventListener('click', function() {
+    console.log('Button clicked');  // Debugging line
+    var aioutput = document.getElementById('aioutput').innerHTML;
+    console.log('aioutput:', aioutput);  // Debugging line
+    // Send aioutput to the server
+    fetch('/save_as_pdf', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        // Include your CSRF token in the headers if you're using Django
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify({aioutput: aioutput})
+    })
+    .then(response => {
+      console.log('Response received');  // Debugging line
+      return response.blob();
+    })
+    .then(blob => {
+      var url = window.URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'aioutput.pdf';
+      document.body.appendChild(a); // we need to append the element to the dom -> otherwise it will not work in firefox
+      a.click();    
+      a.remove();  //afterwards we remove the element again         
+    })
+    .catch(error => console.error('Error:', error));  // Debugging line
   });
+
   </script>
 
 

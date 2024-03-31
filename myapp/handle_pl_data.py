@@ -606,8 +606,8 @@ class HandlePLData:
         print('Data being sent to AI for analysis and interpretation ' + str(datetime.now().time()))
 
         aiResponse = None
-        #aiResponse = self.get_openai_analysis(data, prompt_file_path, industry,"gpt-4-turbo-preview")#"gpt-3.5-turbo"  
-        aiResponse = self.get_anthropic_analysis(data, prompt_file_path, industry,"claude-3-haiku-20240307")#"gpt-3.5-turbo"  
+        aiResponse = self.get_openai_analysis(data, prompt_file_path, industry,"gpt-4-turbo-preview")#"gpt-3.5-turbo"  
+        #aiResponse = self.get_anthropic_analysis(data, prompt_file_path, industry,"claude-3-sonnet-20240229")#"claude-3-haiku-20240307"  
 
         print('Data returned from AI ' + str(datetime.now().time()))
         

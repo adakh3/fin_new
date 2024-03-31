@@ -11,6 +11,13 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from django.shortcuts import render, redirect
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from django.http import FileResponse
+from django.template.loader import get_template
+import json
+from django.http import FileResponse
+import tempfile
 
 
 
@@ -45,22 +52,6 @@ def upload_file_view(request):
         return render(request, 'myapp/upload.html', {'message': response, 'charts': charts})
     return render(request, 'myapp/upload.html')
 
-    '''
-    form = UploadFileForm(request.POST, request.FILES)
-    if form.is_valid():
-        try:
-            row_number = int(request.POST['row_number'])  # Get the row_number field
-            response, charts = handle_file(request.FILES['file'], request, row_number )
-        except Exception as e:
-            context['error'] = f'{e}'
-            return render(request, 'myapp/upload.html', context)
-        
-        print('Form submitted')
-        return render(request, 'myapp/upload.html', {'form': form, 'message': response, 'charts': charts})
-else:
-    form = UploadFileForm()
-return render(request, 'myapp/upload.html', {'form': form})
-'''
 
 def file_sanitiser(f, max_size=5000000):
 
@@ -90,6 +81,31 @@ def file_sanitiser(f, max_size=5000000):
     
     return True
 
+
+#do this later - not implemented yet
+@csrf_exempt
+@require_POST
+def save_as_pdf(request):
+    data = json.loads(request.body)
+    aioutput = data['aioutput']
+
+    # Render the aioutput in a Django template
+    template = get_template('aioutput_template.html')
+    html = template.render({'aioutput': aioutput})
+
+    # Convert the HTML to PDF
+    html_weasyprint = HTML(string=html)
+    pdf_file = html_weasyprint.write_pdf()
+
+    # Create a temporary file to hold the PDF
+    temp = tempfile.NamedTemporaryFile()
+
+    # Write the PDF data to the temporary file
+    temp.write(pdf_file)
+    temp.seek(0)
+
+    # Return the PDF file as a response
+    return FileResponse(temp, as_attachment=True, filename='aioutput.pdf')
 
 def handle_file(f, request, row_number):
 #if the file is an excel file, then we upload it and start, else send an error message
