@@ -82,7 +82,7 @@ def file_sanitiser(f, max_size=5000000):
     return True
 
 
-#do this later - not implemented yet
+#do this later - not implemented yet *****
 @csrf_exempt
 @require_POST
 def save_as_pdf(request):
@@ -129,7 +129,8 @@ def handle_file(f, request, row_number):
     
     #call the main method of the HandlePLData class
     try:
-        results = my_object.main(request.POST['insights'], request.POST['industry'], row_number)
+        results = my_object.main(request.POST['insights'], request.POST['industry'], request.POST["additional_info"], row_number)
+        #self, insights_preference, industry, additionalInfo, row_number
         if(results is not None):
             results = TextFormatter.convert_markdown_to_html(results)
     except Exception as e:

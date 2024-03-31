@@ -107,6 +107,12 @@
           <option value="yoga_studios">Yoga Studios</option>
       </select>
       </div>
+
+      <div class="form-group">
+        <label for="additional_info">Additional information about this P&L that might give helpful context</label>
+        <textarea id="additional_info" name="additional_info" class="form-control" rows="3"></textarea>
+      </div>
+
       <!-- Add the rest of your form fields here -->
       <div class="button-container mb-3">
         <button type="submit" id="uploadButton" class="btn btn-primary">Upload</button>
@@ -175,6 +181,9 @@
       }
     }
 
+
+
+    //to use later 
   function getCookie(name) {
   var cookieValue = null;
   if (document.cookie && document.cookie !== '') {
@@ -191,7 +200,7 @@
   return cookieValue;
 }
 
-    //Save PDF button function - to complete later
+    //Save PDF button function - to complete later*************
     document.getElementById('savePdfButton').addEventListener('click', function() {
     console.log('Button clicked');  // Debugging line
     var aioutput = document.getElementById('aioutput').innerHTML;

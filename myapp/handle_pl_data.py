@@ -300,7 +300,7 @@ class HandlePLData:
 
     #analyse the data starting with revenues, gross proits, net profits and other KPIs, and then details 
     #send to AI for human language interpretation
-    def get_openai_analysis(self, data, prompt_file_path, industry, aiModel):
+    def get_openai_analysis(self, data, prompt_file_path, industry, additionalInfo, aiModel):
         #prompt2 gves much worse results - so I think my original prompt is better
         try:
             with open(prompt_file_path, 'r') as file: 
@@ -312,7 +312,7 @@ class HandlePLData:
                 seed=50,
                 messages=[
                     {"role": "system", "content": prompt},
-                    {"role": "user", "content": f"Here is a CSV dataset:\n{csv_text}\nNow, perform some analysis on this data. This is from {industry} industry for more context",}
+                    {"role": "user", "content": f"Here is a CSV dataset:\n{csv_text}\nNow, perform some analysis on this data. The company is from {industry} industry, and there is additional context in {additionalInfo} - use these in your analysis as well",}
                 ]
             )
             return completion.choices[0].message.content
@@ -321,7 +321,7 @@ class HandlePLData:
             return None
         
 
-    def get_anthropic_analysis(self, data, prompt_file_path, industry, aiModel):
+    def get_anthropic_analysis(self, data, prompt_file_path, industry,additionalInfo, aiModel):
         try:
             with open(prompt_file_path, 'r') as file: 
                 prompt = file.read()
@@ -335,7 +335,7 @@ class HandlePLData:
                 max_tokens=1024,
                 system = prompt,
                 messages=[
-                    {"role": "user", "content": f"Here is a CSV dataset:\n{csv_text}\nNow, perform some analysis on this data. This is from {industry} industry for more context"}
+                    {"role": "user", "content": f"Here is a CSV dataset:\n{csv_text}\nNow, perform some analysis on this data. The company is from {industry} industry, and there is additional context in {additionalInfo} - use these in your analysis as well"}
                 ]
             )
             print(message.content[0].text)
@@ -471,7 +471,7 @@ class HandlePLData:
         return best_row
 
 
-    def main(self, insights_preference, industry, row_number):
+    def main(self, insights_preference, industry, additionalInfo, row_number):
 
         try:
             self.file_content_check()   
@@ -606,8 +606,8 @@ class HandlePLData:
         print('Data being sent to AI for analysis and interpretation ' + str(datetime.now().time()))
 
         aiResponse = None
-        aiResponse = self.get_openai_analysis(data, prompt_file_path, industry,"gpt-4-turbo-preview")#"gpt-3.5-turbo"  
-        #aiResponse = self.get_anthropic_analysis(data, prompt_file_path, industry,"claude-3-sonnet-20240229")#"claude-3-haiku-20240307"  
+        aiResponse = self.get_openai_analysis(data, prompt_file_path, industry, additionalInfo, "gpt-4-turbo-preview")#"gpt-3.5-turbo"  
+        #aiResponse = self.get_anthropic_analysis(data, prompt_file_path, industry,additionalInfo,"claude-3-sonnet-20240229")#"claude-3-haiku-20240307"  
 
         print('Data returned from AI ' + str(datetime.now().time()))
         
