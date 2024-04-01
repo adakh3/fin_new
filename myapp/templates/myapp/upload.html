@@ -27,9 +27,9 @@
 </head>
 <body>
   <div class="container pt-5">
-    <h2> Relogue: Your AI Financial Analyst<span class="badge badge-warning ml-2 align-middle">Beta</span> </h2>
-    <h4>A decidated AI financial analyst available to your business 24-7 </h4>
-    <p>To get instant insights, simply upload a Profit and Loss Statement from Quickbooks (in .xlsx format) for a single period, comparison with a previous period, or over several months.</p>
+    <h2> Relogue AI<span class="badge badge-warning ml-2 align-middle">Beta</span> </h2>
+    <h4>A decidated AI financial analyst for your business </h4>
+    <b>Simply upload a Profit and Loss Statement from Quickbooks (in .xlsx format) comparing two periods, and get instant insights</b>
     <form id='yourFormId' method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
       {% csrf_token %}
       <!--{{ form.as_p }}-->
@@ -110,7 +110,7 @@
 
       <div class="form-group">
         <label for="additional_info">Additional information about this P&L that might give helpful context</label>
-        <textarea id="additional_info" name="additional_info" class="form-control" rows="3"></textarea>
+        <textarea id="additional_info" name="additional_info" class="form-control" rows="3" maxlength="250"></textarea>
       </div>
 
       <!-- Add the rest of your form fields here -->
