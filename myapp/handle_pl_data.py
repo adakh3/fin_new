@@ -12,6 +12,7 @@ from typing import List, Dict
 from .chart_manager import ChartManager
 from .find_interesting_things import FindInterestingThings
 import anthropic
+import tiktoken
 
 ''' Overall separate out key KPIs, revenues, COGS, costs, other income and costs --- 
 one by one send these all to GPT-4 to get insights and predictions 
@@ -222,16 +223,18 @@ class HandlePLData:
     #''''Income', 'Cost of Sales', 'Expenses', 'Other Income(Loss)','Other Expenses', 'Key KPI', 'All')'''
     def select_data(self, data, account_types):
         try:
-            if account_types == 'All':
+            if account_types == ['Key KPI']:
+                data = data[data['Account type'].isin(account_types) | (data['outliers'] == True)]
                 return data
             else:
                 data = data[data['Account type'].isin(account_types)]
+                dataSorted = data.sort_values(data.columns[1], ascending=False).head(20)
+                dataOutliers = data[(data['outliers'] == True) & (~data.index.isin(dataSorted.index))]
+                data = pd.concat([dataSorted, dataOutliers])
             return data
         except Exception as e:
             print('An error occered while preparing data')
             return data
-
-
 
 
     '''
@@ -298,6 +301,13 @@ class HandlePLData:
 
         return data
 
+
+    def count_tokens(self, text, model):
+        encoding = tiktoken.get_encoding("cl100k_base")
+        encoding.encode(text)
+        num_tokens = len(encoding.encode(text))
+        return num_tokens
+
     #analyse the data starting with revenues, gross proits, net profits and other KPIs, and then details 
     #send to AI for human language interpretation
     def get_openai_analysis(self, data, prompt_file_path, industry, additionalInfo, aiModel):
@@ -306,15 +316,23 @@ class HandlePLData:
             with open(prompt_file_path, 'r') as file: 
                 prompt = file.read()
             csv_text = data.to_csv(index=False)
+            userMessage = f"Here is a CSV dataset:\n{csv_text}\nNow, perform some analysis on this data. The company is from {industry} industry, and there is additional context in {additionalInfo} - use these in your analysis as well"
+            totalText = prompt + userMessage
+            tokens = self.count_tokens(totalText, aiModel)
+            print("Total prompt tokens are", self.count_tokens(prompt, aiModel))
+            print("Total user message tokens are", self.count_tokens(userMessage, aiModel))
+            print ("Total input costs is", tokens * 10 / 1000000 )
+        
         
             completion = self.client.chat.completions.create(
                 model = aiModel,
                 seed=50,
                 messages=[
                     {"role": "system", "content": prompt},
-                    {"role": "user", "content": f"Here is a CSV dataset:\n{csv_text}\nNow, perform some analysis on this data. The company is from {industry} industry, and there is additional context in {additionalInfo} - use these in your analysis as well",}
+                    {"role": "user", "content": userMessage ,}
                 ]
             )
+
             return completion.choices[0].message.content
         except Exception as e:
             print(f"Error occurred during AI analysis")
@@ -511,19 +529,8 @@ class HandlePLData:
         print('Total sales saved ' + str(datetime.now().time()))
         print('Total sales are', self.total_sales)
 
- 
-        #select the data based on user input 
-        if(insights_preference == 'Income'):
-            data = self.select_data(data, ['Income'])#here as well we should be able to send a list perhaps
-        elif(insights_preference == 'Cost of Sales'):
-            data = self.select_data(data, ['Cost of Sales'])#here we should be able to send a list of values 
-        elif(insights_preference == 'Expenses'):
-            data = self.select_data(data, ['Expenses'])
-        else:
-            data = self.select_data(data, 'All')
-        
+
         #if its a comparison only of two periods, find outliers in the data
-        
         if(self.dateColumnCount == 2):
             #find and add more analysis
             analyser = FindInterestingThings(data, self.original_columns, self.total_sales)
@@ -536,6 +543,19 @@ class HandlePLData:
             data = analyser.find_column_outliers('Percentage of Sales Difference', 'Cost of Sales')
             data = analyser.find_column_outliers('% Difference','Expenses')
             data = analyser.find_column_outliers('% Difference','Key KPI')
+
+ 
+        #select the data based on user input 
+        if(insights_preference == 'Income'):
+            data = self.select_data(data, ['Income'])#here as well we should be able to send a list perhaps
+        elif(insights_preference == 'Cost of Sales'):
+            data = self.select_data(data, ['Cost of Sales'])#here we should be able to send a list of values 
+        elif(insights_preference == 'Expenses'):
+            data = self.select_data(data, ['Expenses'])
+        else:
+            data = self.select_data(data, ['Key KPI'])
+        
+ 
 
         #data ['outliers'] = False
 
