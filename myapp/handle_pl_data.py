@@ -327,6 +327,7 @@ class HandlePLData:
             completion = self.client.chat.completions.create(
                 model = aiModel,
                 seed=50,
+                #max_tokens=750,
                 messages=[
                     {"role": "system", "content": prompt},
                     {"role": "user", "content": userMessage ,}
@@ -350,7 +351,7 @@ class HandlePLData:
             api_key=os.getenv('ANTHROPIC_API_KEY'),)
             message = client.messages.create(
                 model=aiModel,
-                max_tokens=1024,
+                max_tokens=500,
                 system = prompt,
                 messages=[
                     {"role": "user", "content": f"Here is a CSV dataset:\n{csv_text}\nNow, perform some analysis on this data. The company is from {industry} industry, and there is additional context in {additionalInfo} - use these in your analysis as well"}
