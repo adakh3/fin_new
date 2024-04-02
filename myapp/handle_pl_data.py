@@ -351,7 +351,7 @@ class HandlePLData:
             api_key=os.getenv('ANTHROPIC_API_KEY'),)
             message = client.messages.create(
                 model=aiModel,
-                max_tokens=500,
+                max_tokens=1024,
                 system = prompt,
                 messages=[
                     {"role": "user", "content": f"Here is a CSV dataset:\n{csv_text}\nNow, perform some analysis on this data. The company is from {industry} industry, and there is additional context in {additionalInfo} - use these in your analysis as well"}
@@ -627,8 +627,8 @@ class HandlePLData:
         print('Data being sent to AI for analysis and interpretation ' + str(datetime.now().time()))
 
         aiResponse = None
-        aiResponse = self.get_openai_analysis(data, prompt_file_path, industry, additionalInfo, "gpt-4-turbo-preview")#"gpt-3.5-turbo"  
-        #aiResponse = self.get_anthropic_analysis(data, prompt_file_path, industry,additionalInfo,"claude-3-sonnet-20240229")#"claude-3-haiku-20240307"  
+        #aiResponse = self.get_openai_analysis(data, prompt_file_path, industry, additionalInfo, "gpt-4-turbo-preview")#"gpt-3.5-turbo"  
+        aiResponse = self.get_anthropic_analysis(data, prompt_file_path, industry,additionalInfo,"claude-3-sonnet-20240229")#"claude-3-haiku-20240307"  
 
         print('Data returned from AI ' + str(datetime.now().time()))
         
