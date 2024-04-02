@@ -2,7 +2,9 @@ In this chat you will getting a list of column headers from an accounting statem
 more 'Periods' of accounts with years or months or quarters or date ranges, or specific dates. 
 Fore example June 2020, 1 July 2021, 2022, April 2020 - March 2021, Feb, Jan, etc.
 
-In the input look for columns with any kind of dates in it, and return me the columns with 'true' against date ones and 'false' against all else
+Alternately it would have columns that comapre budget to actuals, or forecast to actuals.
+
+In the input look for columns with any kind of dates in it(or budget, actual), and return me the columns with 'true' against date (or budgeted/actual) ones and 'false' against all else
 
 You will then give a JSON response. 
 
@@ -28,4 +30,12 @@ Example input {June 2021}
 Ouput   
 {
     "June 2021": true
+}
+
+Example input {Accounts, Budgeted, Actual}
+Ouput   
+{
+    "Accounts": false, 
+    "Budgeted": true,
+    "Actual": true
 }

@@ -622,7 +622,7 @@ class HandlePLData:
             else:
                 prompt_file_path = 'resources/pl_simple_prompt.txt'
         else:
-            prompt_file_path = 'resources/pl_category_prompt.txt'
+            prompt_file_path = 'resources/pl_simple_prompt.txt'
 
         print('Data being sent to AI for analysis and interpretation ' + str(datetime.now().time()))
 

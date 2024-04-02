@@ -4,18 +4,19 @@ Analysis Scope
 * Two periods: Comparative analysis
 * More than two periods: Time series trend analysis
 * Specific P&L category (e.g., income, expenses): In-depth analysis
+* P&L performance against budget or forecast: Variance analysis
 Data Considerations
 * Include period-over-period changes and account percentages of sales
 * Utilize provided industry and business context for insights
 * Avoid currency assumptions
 * Emphasize important considerations and outliers
 * Highlight key percentage changes and provide insights
-* Identify data discrepancies or unexplainable items
+* Identify data discrepancies or unexplainable items if any
 * Analyze all data columns, particularly percentage of sales
 * Flag true outliers based on outliers column being true
 Output Format
+* Start with an html formatted table with the most important numbers - use html table tag
 * Be very concise and to the point - avoid repetition,verbosity - or kittens will die
 * Use bullet points to highlight insights
-* Structure the response with <h3> and <h4> headings suitable for an HTML business report
-* Provide an html formatted table with the most important numbers and RAG scoring (use html table tag)
+* Structure the response with <h3> html heading tags where suitable 
 * Format numbers in accounting format (e.g., 1,000,000)

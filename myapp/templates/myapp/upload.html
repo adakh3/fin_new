@@ -29,7 +29,7 @@
   <div class="container pt-5">
     <h2> Relogue AI<span class="badge badge-warning ml-2 align-middle">Beta</span> </h2>
     <h4>A decidated AI financial analyst for your business </h4>
-    <b>Simply upload a Profit and Loss Statement from Quickbooks (in .xlsx format) comparing two periods, and get instant insights</b>
+    <b>Simply upload a Profit and Loss Statement from Quickbooks (in .xlsx format) comparing two periods, or budgeted vs actual, and get instant insights</b>
     <form id='yourFormId' method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
       {% csrf_token %}
       <!--{{ form.as_p }}-->
@@ -37,7 +37,7 @@
       <label for="id_file"> Profit & Loss File:</label>
       <input type="file" id="id_file" name="file" required>
       <div class="form-group">
-        <label for="row_number">Could you tell us the row number where your column titles are? This is where your data begins in the Excel file. (Required)</label>
+        <label for="row_number">Could you tell us the row number where your column titles are? This is where your data begins in the Excel file (required)</label>
         <input type="number" id="row_number" name="row_number" min="1" class="form-control" required>
       </div>
       <div class="form-group">
@@ -109,7 +109,7 @@
       </div>
 
       <div class="form-group">
-        <label for="additional_info">Additional information about this P&L that might give helpful context (Highly recommended for better analysys)</label>
+        <label for="additional_info">Additional information about this P&L that might give helpful context (highly recommended for better analysys)</label>
         <textarea id="additional_info" name="additional_info" class="form-control" rows="3" maxlength="250"></textarea>
       </div>
 

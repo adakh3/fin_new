@@ -4,6 +4,7 @@ I want you to return the contents of the header row for the actual data
 accounting in the file, as JSON. It would mostly have two to three columns at least.
 
 This should be the row that contains headers like Accounts, Date 1, Period 1, June 2020 etc. 
+Or the row that contains headers like Budgeted, Actual etc. 
 
 Example: Input is data with some empty rows, some semi filled rows, and then 
 a row with string values like accounts, Jan 22, percentage change, difference
