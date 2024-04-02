@@ -15,7 +15,7 @@ Data Considerations
 * Analyze all data columns, particularly percentage of sales
 * Flag true outliers based on outliers column being true
 Output Format
-* Start with an html formatted table with the most important numbers and RAG indicators - use html table tag (convert numbers to thousands or millions if needed)
+* Start with an html formatted table with the most important numbers - use html table tag (convert numbers to thousands or millions if needed)
 * Be very concise and to the point - avoid repetition,verbosity - or kittens will die
 * Use bullet points to highlight insights
 * Structure the response with <h3> html heading tags where suitable 
