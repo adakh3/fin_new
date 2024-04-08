@@ -13,6 +13,7 @@ from .chart_manager import ChartManager
 from .find_interesting_things import FindInterestingThings
 import anthropic
 import tiktoken
+from dotenv import load_dotenv
 
 ''' Overall separate out key KPIs, revenues, COGS, costs, other income and costs --- 
 one by one send these all to GPT-4 to get insights and predictions 
@@ -22,6 +23,7 @@ then get a summary of all the insights and predictions
 class HandlePLData:
 
     client = OpenAI()
+    load_dotenv()  # take environment variables from .env.
     openai.api_key = os.getenv('OPENAI_API_KEY')
 
     dateColumnCount = 0
@@ -272,7 +274,7 @@ class HandlePLData:
         
         # Add the 'account type' column for the rows between start_index and end_index
         if(accountType == 'Other Income'):
-            data.loc[start_index:end_index, 'Account type'] = 'Income'    
+            data.loc[start_index:end_index, 'Account type'] = 'Income'
         elif( accountType == 'Other Expenses'):
             data.loc[start_index:end_index, 'Account type'] = 'Expenses'
         else:
@@ -353,7 +355,7 @@ class HandlePLData:
             api_key=os.getenv('ANTHROPIC_API_KEY'),)
             message = client.messages.create(
                 model=aiModel,
-                max_tokens=1024,
+                max_tokens=1500,
                 system = prompt,
                 messages=[
                     {"role": "user", "content": f"Here is a CSV dataset:\n{csv_text}\nNow, perform some analysis on this data. The company is from {industry} industry, and there is additional context in {additionalInfo} - use these in your analysis as well"}
@@ -521,7 +523,7 @@ class HandlePLData:
         data = self.mark_account_types(data, 'Income')
         data = self.mark_account_types(data, 'Cost of Sales')
         data = self.mark_account_types(data, 'Expenses')
-        data = self.mark_account_types(data, 'Other Income(Loss)')
+        data = self.mark_account_types(data, 'Other Income')
         data = self.mark_account_types(data, 'Other Expenses')
         data = self.mark_key_kpis(data)
 
@@ -619,13 +621,13 @@ class HandlePLData:
         #choose your prompt based on number of data columns 
         if(insights_preference == 'All' or insights_preference == 'Key KPI'):
             if self.dateColumnCount > 2:
-                prompt_file_path =  'resources/pl_simple_prompt.txt' #'resources/pl_decrease_costs_prompt.txt'
+                prompt_file_path =  'resources/pl_founder_prompt.txt' #'resources/pl_simple_prompt.txt'
             elif self.dateColumnCount == 2:
-                prompt_file_path = 'resources/pl_simple_prompt.txt' #'resources/pl_decrease_costs_prompt.txt'
+                prompt_file_path = 'resources/pl_founder_prompt.txt' #'resources/pl_simple_prompt.txt'
             else:
-                prompt_file_path = 'resources/pl_simple_prompt.txt' #'resources/pl_decrease_costs_prompt.txt'
+                prompt_file_path = 'resources/pl_founder_prompt.txt' #'resources/pl_simple_prompt.txt'
         else:
-            prompt_file_path = 'resources/pl_simple_prompt.txt' #'resources/pl_decrease_costs_prompt.txt'
+            prompt_file_path = 'resources/pl_founder_prompt.txt' #'resources/pl_simple_prompt.txt'
 
         print('Data being sent to AI for analysis and interpretation ' + str(datetime.now().time()))
 

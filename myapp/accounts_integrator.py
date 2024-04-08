@@ -1,10 +1,14 @@
 from quickbooks import QuickBooks
+from dotenv import load_dotenv
+import os
+
+load_dotenv()  # take environment variables from .env.
 
 #To do:replace these with environment variables 
 client = QuickBooks(
     auth_type='oauth2',
-    client_id='ABeJieEWZIujd5ZU6gigEYcnFSjSgElDrSv8tYoNIeaNB5NsA3',
-    client_secret='Ef0QyYIrFNhZtMplSQ6hNEYRS03wRwD9ZMw4DccS',
+    client_id=  os.getenv('QB_CLIENT_ID'), 
+    client_secret= os.getenv('QB_CLIENT_SECRET'), 
     app_environment='sandbox',
     callback_url='upload_file_view',
     )
