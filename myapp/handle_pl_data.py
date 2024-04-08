@@ -224,7 +224,9 @@ class HandlePLData:
     def select_data(self, data, account_types):
         try:
             if account_types == ['Key KPI']:
+                data2 = data.groupby('Account type').apply(lambda x: x.sort_values(x.columns[1], ascending=False).head(10)).reset_index(drop=True)
                 data = data[data['Account type'].isin(account_types) | (data['outliers'] == True)]
+                data = pd.concat([data, data2]).drop_duplicates()
                 return data
             else:
                 data = data[data['Account type'].isin(account_types)]
@@ -554,7 +556,8 @@ class HandlePLData:
         elif(insights_preference == 'Expenses'):
             data = self.select_data(data, ['Expenses'])
         else:
-            data = self.select_data(data, ['Key KPI'])
+            data = data = self.select_data(data, ['Key KPI'])
+            #data = data
         
  
 
@@ -616,13 +619,13 @@ class HandlePLData:
         #choose your prompt based on number of data columns 
         if(insights_preference == 'All' or insights_preference == 'Key KPI'):
             if self.dateColumnCount > 2:
-                prompt_file_path = 'resources/pl_simple_prompt.txt'
+                prompt_file_path =  'resources/pl_simple_prompt.txt' #'resources/pl_decrease_costs_prompt.txt'
             elif self.dateColumnCount == 2:
-                prompt_file_path = 'resources/pl_simple_prompt.txt'
+                prompt_file_path = 'resources/pl_simple_prompt.txt' #'resources/pl_decrease_costs_prompt.txt'
             else:
-                prompt_file_path = 'resources/pl_simple_prompt.txt'
+                prompt_file_path = 'resources/pl_simple_prompt.txt' #'resources/pl_decrease_costs_prompt.txt'
         else:
-            prompt_file_path = 'resources/pl_simple_prompt.txt'
+            prompt_file_path = 'resources/pl_simple_prompt.txt' #'resources/pl_decrease_costs_prompt.txt'
 
         print('Data being sent to AI for analysis and interpretation ' + str(datetime.now().time()))
 
