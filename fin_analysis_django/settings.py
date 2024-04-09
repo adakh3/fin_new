@@ -133,3 +133,13 @@ ALLOWED_HOSTS = ['sea-turtle-app-dr5wz.ondigitalocean.app', 'www.relogue.com', '
 LOGIN_URL = '/login/'
 LOGOUT_REDIRECT_URL = '/after-logout/'
 LOGIN_REDIRECT_URL = 'home'
+
+
+QB_APP_ENV = 'sandbox'
+QB_REDIRECT_URL = 'http://localhost:8000'
+QB_SCOPE = 'https://sandbox-quickbooks.api.intuit.com'
+QUICKBOOKS_CLIENT_ID = 'ABeJieEWZIujd5ZU6gigEYcnFSjSgElDrSv8tYoNIeaNB5NsA3'
+QUICKBOOKS_CLIENT_SECRET = 'Ef0QyYIrFNhZtMplSQ6hNEYRS03wRwD9ZMw4DccS'
+
+
+

@@ -18,12 +18,11 @@ from django.template.loader import get_template
 import json
 from django.http import FileResponse
 import tempfile
+from .quickbooks.quickbooks_integrator import QuickbooksIntegrator
 
 
 
 #@login_required
-
-
 def register(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
@@ -139,3 +138,22 @@ def handle_file(f, request, row_number):
     #else:
     return results, my_object.charts
 
+
+
+def start_quickbooks_auth(request):
+    qb_auth = AccountsIntegrator()
+    auth_url = qb_auth.get_authorization_url()
+    return redirect(auth_url)
+
+
+# views.py continued
+
+def quickbooks_callback(request):
+    auth_code = request.GET.get('code')
+    if auth_code:
+        qb_auth = AccountsIntegrator()
+        access_token = qb_auth.get_bearer_token(auth_code)
+        # Store this access token securely for future API calls
+        return HttpResponse("QuickBooks Connected Successfully!")
+    else:
+        return HttpResponse("Error connecting to QuickBooks", status=400)

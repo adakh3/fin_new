@@ -22,10 +22,11 @@ from myapp import views
 
 
 urlpatterns = [
-    #path('admin/', admin.site.urls),
+    path('admin/', admin.site.urls),
     path('', upload_file_view, name='home'),
     path('login/', auth_views.LoginView.as_view(), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='after_logout'),
-    path('register/', views.register, name='register')
+    path('register/', views.register, name='register'),
+    #path('', qb_auth_success, name='qb_auth_success')
 
 ]

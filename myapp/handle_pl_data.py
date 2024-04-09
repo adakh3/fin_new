@@ -14,6 +14,10 @@ from .find_interesting_things import FindInterestingThings
 import anthropic
 import tiktoken
 from dotenv import load_dotenv
+from .quickbooks.quickbooks_integrator import QuickbooksIntegrator
+from .quickbooks.quickbooks_auth import QuickbooksAuth
+from django.conf import settings
+
 
 ''' Overall separate out key KPIs, revenues, COGS, costs, other income and costs --- 
 one by one send these all to GPT-4 to get insights and predictions 
@@ -22,19 +26,31 @@ then get a summary of all the insights and predictions
 
 class HandlePLData:
 
-    client = OpenAI()
-    load_dotenv()  # take environment variables from .env.
-    openai.api_key = os.getenv('OPENAI_API_KEY')
 
-    dateColumnCount = 0
-    total_sales = []
-    original_columns = []
-    chart_manager = ChartManager()
-    charts = None
 
     def __init__(self, filename):
         self.filepath = 'uploaded_files/' + filename
         self.filename = filename
+
+        self.client = OpenAI()
+        load_dotenv()  # take environment variables from .env.
+        openai.api_key = os.getenv('OPENAI_API_KEY')
+
+        self.dateColumnCount = 0
+        self.total_sales = []
+        self.original_columns = []
+        self.chart_manager = ChartManager()
+        self.charts = None
+
+        self.qbAuth = QuickbooksAuth()
+        #todo: store this refresh token somewhere in the db and the realm
+        self.qbrefreshToken = 'AB11721409801zHVLa4dVfZ7X5iL9qOpS2xlrUtQ21IncWpQCD'
+        self.qbRelamID = '9341452098469139'
+        self.qbIntegrator = QuickbooksIntegrator(self.qbrefreshToken, self.qbRelamID)
+        self.customers = self.qbIntegrator.getCustomers()
+        self.qbReport = self.qbIntegrator.getReport(reportName='TrialBalance')
+        self.qbReport = self.qbIntegrator.getReport(reportName='ProfitAndLoss')
+    
 
     #load the data from an excel file 
     def find_data_start(self, data, row_number):
