@@ -49,7 +49,7 @@ class QuickbooksIntegrator:
             return customers
 
     #expects dates in '%Y-%m-%d' format eg '2022-12-31'
-    def getReport(self, start_date=None, end_date=None):
+    def getReport(self, reportName, start_date=None, end_date=None):
         if not start_date:
             start_date = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
         if not end_date:
@@ -66,7 +66,7 @@ class QuickbooksIntegrator:
                 'end_date': end_date,
                 }
 
-            trial_balance = self.client.get_report(report_type='TrialBalance', qs=params)
+            trial_balance = self.client.get_report(report_type=reportName, qs=params)
             return trial_balance
         except Exception as e:
             # If we get an UnauthorizedException, the access token has expired
@@ -81,15 +81,6 @@ class QuickbooksIntegrator:
                 start_date=start_date,
                 end_date=end_date
             )'''
-            trial_balance = self.client.get_report(report_type='TrialBalance', qs=params)
-
-            # Print the total assets
-            print('Total assets:',trial_balance['Total Assets'])
-
-            # Print the total liabilities
-            print('Total liabilities:',trial_balance['Total Liabilities'])
-
-            # Print the equity
-            print('Total assets:',trial_balance['Equity'])
+            trial_balance = self.client.get_report(report_type=reportName, qs=params)
 
             return trial_balance
