@@ -42,21 +42,32 @@ class HandlePLData:
         self.chart_manager = ChartManager()
         self.charts = None
 
+        '''
+        #Quickbooks sample code 
         self.qbAuth = QuickbooksAuth()
         #todo: store this refresh token somewhere in the db and the realm
-        self.qbrefreshToken = 'AB11721409801zHVLa4dVfZ7X5iL9qOpS2xlrUtQ21IncWpQCD'
+        self.qbrefreshToken = 'AB11723717905KEc1VyGQV7atitZvz58PLqSfMDXNszjTHsTcJ'
         self.qbRelamID = '9341452098469139'
         self.qbIntegrator = QuickbooksIntegrator(self.qbrefreshToken, self.qbRelamID)
         self.customers = self.qbIntegrator.getCustomers()
-        self.qbReport = self.qbIntegrator.getReport(reportName='TrialBalance')
-        self.qbReport = self.qbIntegrator.getReport(reportName='ProfitAndLoss')
-    
+        #pl for period 1
+        self.qbPl1 = self.qbIntegrator.getReport(reportName='ProfitAndLoss')
+        #pl for period 2
+        self.qbPl2 = self.qbIntegrator.getReport(reportName='ProfitAndLoss')
+        #budgeted PL for period 1
+        self.qbBudgetPl = self.qbIntegrator.getBudget() #todo: this is not working - fix it
 
+        self.qbTb = self.qbIntegrator.getReport(reportName='TrialBalance')
+
+        #add the PL and budget to a self dataframe
+        '''
+            
     #load the data from an excel file 
     def find_data_start(self, data, row_number):
         try:
             #headers = self.data_headers_from_ai('resources/find_headers_prompt.txt')
             row_number = row_number - 2 #self.get_file_header_row(headers)
+            
             return row_number
         except Exception as e:
             print("Error finding data in the file")
