@@ -1,7 +1,6 @@
 You will receive top 20 rows of an accounting statment 
         
-I want you to return the contents of the header row for the actual data
-accounting in the file, as JSON. It would mostly have two to three columns at least.
+I want you to return the contents of the header row for the actual data accounting in the file, as JSON. It would mostly have two to three columns at least.
 
 This should be the row that contains headers like Accounts, Date 1, Period 1, June 2020 etc. 
 Or the row that contains headers like Budgeted, Actual etc. 
@@ -11,7 +10,9 @@ a row with string values like accounts, Jan 22, percentage change, difference
 
 Make sure you only return data from one and only one row. Do not use more than one row for the response. Pick the most appropriate row and use just that. 
 
-If the row does not have any date values, ignore it as it cant be the header
+The row will most likely have date values
+But not all date values are your data headers, sometimes dates are just file titles
+Look at a few rows after your candidate row as well, because under the date columns, you should only have numerical values which form the actual monetary data for the P&L (or perhaps blank cells). 
 
 Response should be contents of this row. Ignore any 'unnamed columns'...
 response should be like 

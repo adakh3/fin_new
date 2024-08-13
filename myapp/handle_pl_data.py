@@ -31,6 +31,7 @@ class HandlePLData:
     def __init__(self, filename):
         self.filepath = 'uploaded_files/' + filename
         self.filename = filename
+        self.aiModel = "gpt-4o-mini"
 
         self.client = OpenAI()
         load_dotenv()  # take environment variables from .env.
@@ -65,8 +66,9 @@ class HandlePLData:
     #load the data from an excel file 
     def find_data_start(self, data, row_number):
         try:
-            #headers = self.data_headers_from_ai('resources/find_headers_prompt.txt')
-            row_number = row_number - 2 #self.get_file_header_row(headers)
+            headers = self.data_headers_from_ai('resources/find_headers_prompt.txt')
+            #row_number = row_number - 2 #self.get_file_header_row(headers)
+            row_number = self.get_file_header_row(headers)
             
             return row_number
         except Exception as e:
@@ -166,7 +168,8 @@ class HandlePLData:
         Gets a dictionary of date columns from the data. True for date columns and False for non-date columns.
         """
         try:
-            column_names = [str(col) for col in data.columns] 
+            #column_names = [str(col) for col in data.columns] 
+            column_names = [str(col).replace(',', ' ') for col in data.columns]
             column_names_str = ', '.join(column_names)
             date_columns = self.get_AI_value_match(column_names_str, 'resources/prompt_columns_bool.txt')
             return json.loads(date_columns)
@@ -419,7 +422,7 @@ class HandlePLData:
 
         return rows_with_strings
 
-    #sends columns to GPT 3.5 to map to a set of tags that I give it
+    #sends columns to GPT to map to a set of tags that I give it
     #returns a dictionary with indexes for accounts and date columns 
     def get_AI_value_match(self, values, prompt_file_path):
         try:
@@ -428,7 +431,7 @@ class HandlePLData:
             data_string = values
             #data_string = columns.to_csv(index=False)
             completion = self.client.chat.completions.create(
-            model = "gpt-3.5-turbo",
+            model =  self.aiModel, #"gpt-4o-mini",#"gpt-3.5-turbo",
             seed=50,
             response_format={ "type": "json_object" },
             messages=[
@@ -460,6 +463,7 @@ class HandlePLData:
             
         return True
             
+    #
     def data_headers_from_ai(self, prompt_file_path):
         try:
             # Read the first 10 rows from the excel file
@@ -474,7 +478,7 @@ class HandlePLData:
             
             # Send the JSON data to AI for column header matching
             completion = openai.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model= self.aiModel,
                 seed=50,
                 messages=[
                     {"role": "system", "content": prompt},
@@ -659,8 +663,8 @@ class HandlePLData:
         print('Data being sent to AI for analysis and interpretation ' + str(datetime.now().time()))
 
         aiResponse = None
-        #aiResponse = self.get_openai_analysis(data, prompt_file_path, industry, additionalInfo, "gpt-4-turbo-preview")#"gpt-3.5-turbo"  
-        aiResponse = self.get_anthropic_analysis(data, prompt_file_path, industry,additionalInfo,"claude-3-sonnet-20240229")#"claude-3-haiku-20240307"  
+        aiResponse = self.get_openai_analysis(data, prompt_file_path, industry, additionalInfo, self.aiModel)#"gpt-3.5-turbo"  
+        #aiResponse = self.get_anthropic_analysis(data, prompt_file_path, industry,additionalInfo,"claude-3-sonnet-20240229")#"claude-3-haiku-20240307"  
 
         print('Data returned from AI ' + str(datetime.now().time()))
         

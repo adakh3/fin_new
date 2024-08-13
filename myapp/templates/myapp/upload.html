@@ -23,11 +23,13 @@
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
   <!-- Add your custom CSS -->
   <link rel="stylesheet" href="styles.css">
+
+
   
 </head>
 <body>
   <div class="container pt-5">
-    <h2> Relogue<span class="badge badge-warning ml-2 align-middle">Beta</span> </h2>
+    <h2> Relogue AI<span class="badge badge-warning ml-2 align-middle">Beta</span> </h2>
     <h4>Your AI financial analyst </h4>
     <b>Simply upload a Profit and Loss Statement from Quickbooks (in .xlsx format) comparing two periods, or budgeted vs actual, and get instant insights</b>
     <form id='yourFormId' method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
@@ -36,6 +38,9 @@
 
       <label for="id_file"> Profit & Loss File:</label>
       <input type="file" id="id_file" name="file" required>
+      <!--<div id="drop_zone" style="width: 200px; height: 100px; border: 1px solid black;">Drop files here</div>-->
+
+
       <div class="form-group">
         <label for="row_number">Could you tell us the row number where your column titles are? This is where your data begins in the Excel file (required)</label>
         <input type="number" id="row_number" name="row_number" min="1" class="form-control" required>
@@ -144,16 +149,42 @@
     var uploadButton = document.getElementById('uploadButton');
     var fileInput = document.getElementById('id_file'); // Assuming 'id_file' is the id of your file input field
     var rowNumberInput = document.getElementById('row_number');
+    var dropZone = document.getElementById('drop_zone');
+    var file;
 
-    function checkInputs() {
-      var file = fileInput.files[0];
-      var rowNumber = rowNumberInput.value;
-      if (file && rowNumber) {
-        uploadButton.disabled = false;
-      } else {
-        uploadButton.disabled = true;
-      }
-    }
+dropZone.addEventListener('dragover', function(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  e.dataTransfer.dropEffect = 'copy';
+});
+
+
+dropZone.addEventListener('drop', function(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  if (e.dataTransfer.files.length > 0) {
+    file = e.dataTransfer.files[0];
+    console.log('File dropped: ', file);
+    // Truncate the file name if it's longer than 20 characters
+    var fileName = file.name.length > 20 ? file.name.substring(0, 20) + '...' : file.name;
+    // Update the drop zone with the file name and an icon
+    dropZone.innerHTML = '<i class="fas fa-file"></i> ' + fileName;
+    checkInputs2();
+  }
+});
+
+function checkInputs2() {
+  var rowNumber = rowNumberInput.value;
+  if (file && rowNumber) {
+    console.log('Both file and row number are present');
+    uploadButton.disabled = false;
+  } else {
+    console.log('Either file or row number is missing');
+    uploadButton.disabled = true;
+  }
+}
+
+
 
     fileInput.addEventListener('change', checkInputs);
     rowNumberInput.addEventListener('input', checkInputs);
@@ -161,6 +192,7 @@
     // Call checkInputs to set the initial state of the button
     checkInputs();
 
+    //submit the form and show the loading message
     document.getElementById('yourFormId').addEventListener('submit', function() {
       document.getElementById('loading').style.display = 'block';
     });
@@ -182,7 +214,88 @@
     }
 
 
+/*
+var uploadButton = document.getElementById('uploadButton');
+  var fileInput = document.getElementById('id_file'); // Assuming 'id_file' is the id of your file input field
+  var rowNumberInput = document.getElementById('row_number');
+  var dropZone = document.getElementById('drop_zone');
+  var file;
 
+  // Call checkInputs to set the initial state of the button
+  checkInputs();
+
+  fileInput.addEventListener('change', function() {
+    if (fileInput.files.length > 0) {
+      file = fileInput.files[0];
+    }
+    checkInputs();
+  });
+
+  rowNumberInput.addEventListener('input', checkInputs);
+
+  dropZone.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'copy';
+  });
+
+  dropZone.addEventListener('drop', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer.files.length > 0) {
+      file = e.dataTransfer.files[0];
+      console.log('File dropped: ', file);
+      // Truncate the file name if it's longer than 20 characters
+      var fileName = file.name.length > 20 ? file.name.substring(0, 20) + '...' : file.name;
+      // Update the drop zone with the file name and an icon
+      dropZone.innerHTML = '<i class="fas fa-file"></i> ' + fileName;
+    }
+  });
+
+  function checkInputs() {
+    if (file && rowNumberInput.value) {
+      console.log('Both file and row number are provided.');
+      uploadButton.disabled = false; // Enable the button
+
+    } else {
+      console.log('Either file or row number is missing.');
+      uploadButton.disabled = true; // Disable the button
+
+    }
+  }
+
+  document.getElementById('yourFormId').addEventListener('submit', function(e) {
+    e.preventDefault();
+    checkInputs();
+    document.getElementById('loading').style.display = 'block';
+
+    var formData = new FormData();
+    formData.append('file', file);
+    formData.append('row_number', rowNumberInput.value); // rowNumber is the row number
+
+    console.log("url is:" + window.location.pathname);
+    console.log(window.location);
+
+
+    fetch(window.location.pathname, {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log(data);
+    })
+    
+    .catch(error => {
+      console.error('Error:', error);
+    });
+  });
+*/
+
+
+  </script>
+
+  <script>
     //to use later 
   function getCookie(name) {
   var cookieValue = null;
@@ -237,3 +350,9 @@
 </body>
 
 </html>
+
+
+
+
+
+
