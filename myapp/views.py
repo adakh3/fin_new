@@ -41,7 +41,9 @@ def upload_file_view(request):
     context = {}
     if request.method == 'POST':
         try:
-            row_number = int(request.POST['row_number'])  # Get the row_number field
+            #row_number = int(request.POST['row_number'])  # Get the row_number field
+            #ignoring the row number at the moment 
+            row_number = 0
             response, charts = handle_file(request.FILES['file'], request, row_number )
         except Exception as e:
             context['error'] = f'{e}'
