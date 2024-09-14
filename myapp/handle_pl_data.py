@@ -25,12 +25,34 @@ then get a summary of all the insights and predictions
 '''
 
 class HandlePLData:
+    """
+    HandlePLData is a class designed to process and analyze Profit and Loss (P&L) data.
+    
+    This class provides functionality to:
+    1. Load P&L data from Excel files or QuickBooks
+    2. Clean and prepare the data for analysis
+    3. Identify key financial metrics and KPIs
+    4. Perform AI-assisted analysis using OpenAI's GPT models and Anthropic's models
+    5. Generate insights and predictions based on the financial data
+    6. Create visualizations and charts for the analyzed data
+    
+    Key features:
+    - Data loading and preprocessing
+    - AI-powered data analysis and interpretation
+    - Integration with QuickBooks for direct data retrieval
+    - Customizable analysis based on industry and additional context
+    - Token counting for AI model inputs
+    - Error handling and logging throughout the process
+    
+    The class uses various helper methods to handle different aspects of data processing
+    and analysis, making it a comprehensive tool for financial data interpretation.
+    """
 
 
-
-    def __init__(self, filename):
-        self.filepath = 'uploaded_files/' + filename
+    def __init__(self, filename=None, qb_data=None):
+        self.filepath = 'uploaded_files/' + filename if filename else None
         self.filename = filename
+        self.qb_data = qb_data
         self.aiModel = "gpt-4o-mini"
 
         self.client = OpenAI()
@@ -76,26 +98,25 @@ class HandlePLData:
             return None
 
     #load the data from an excel file
-    def load_data_table(self, start_row):
+    def load_data_table(self, start_row=None):
+        if self.qb_data is not None:
+            return self.qb_data
+        else:
+            try:
+                if start_row is not None:
+                    data = pd.read_excel(self.filepath, skiprows=range(start_row+1))
+                else:
+                    data = None
 
-        try:
-            if start_row is not None:
-                data = pd.read_excel(self.filepath, skiprows=range(start_row+1))
-                #data = data.iloc[start_row:]
-                print('columns are', data.columns.tolist())
-
-            else:
+                if len(data.shape) < 1:
+                    raise Exception("File does not contain data. Please upload a file with valid P&L data.")
+                
+            except Exception as e:
+                print("An error occurred while loading the data")
                 data = None
-
-            if len(data.shape) < 1:
-                raise Exception("File does not contain data. Please upload a file with valid P&L data.")
             
-        except Exception as e:
-            print("An error occurred while loading the data")
-            data = None
+            return data
         
-        return data
-    
 
     def clean_and_prepare_data(self, data: pd.DataFrame) -> pd.DataFrame:
         """
@@ -524,15 +545,19 @@ class HandlePLData:
 
         return best_row
 
-
+    #main function that is called from the view and handles all the data processing and analysis
     def main(self, insights_preference, industry, additionalInfo, row_number):
 
-        try:
-            self.file_content_check()   
-        except Exception as e:
-            raise ValueError(str(e)) from e
         
-        df = pd.read_excel(self.filepath)
+        #if data is already loaded from quickbooks, return that 
+        if self.qb_data is not None:
+            df = self.qb_data
+        else:
+            try:
+                self.file_content_check()   
+            except Exception as e:
+                raise ValueError(str(e)) from e
+            df = pd.read_excel(self.filepath)
         
         #calling all the functions now 
         i = self.find_data_start(df, row_number) 

@@ -27,6 +27,7 @@ urlpatterns = [
     path('login/', auth_views.LoginView.as_view(), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='after_logout'),
     path('register/', views.register, name='register'),
-    #path('', qb_auth_success, name='qb_auth_success')
-
+    path('start_quickbooks_operations/', views.start_quickbooks_operations, name='start_quickbooks_operations'),
+    path('quickbooks/callback/', views.quickbooks_callback, name='quickbooks_callback'),
+    # Remove the path for start_quickbooks_auth if it's no longer used
 ]

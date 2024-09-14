@@ -121,7 +121,9 @@
       <!-- Add the rest of your form fields here -->
       <div class="button-container mb-3">
         <button type="submit" id="uploadButton" class="btn btn-primary">Upload</button>
+        <button type="button" id="qbButton" class="btn btn-secondary">My Quickbooks P&L</button>
       </div>
+
     </form>
     {% if error %}
     <p class="error">{{ error }}</p>
@@ -146,18 +148,64 @@
 
   <script>
 
-    var uploadButton = document.getElementById('uploadButton');
-    var fileInput = document.getElementById('id_file'); // Assuming 'id_file' is the id of your file input field
-    var rowNumberInput = document.getElementById('row_number');
-    var dropZone = document.getElementById('drop_zone');
-    var file;
+  var uploadButton = document.getElementById('uploadButton');
+  var qbButton = document.getElementById('qbButton');
+  var fileInput = document.getElementById('id_file'); // Assuming 'id_file' is the id of your file input field
+  //var rowNumberInput = document.getElementById('row_number');
+  var dropZone = document.getElementById('drop_zone');
+  var file;
 
+
+
+  qbButton.addEventListener('click', function(e) {
+    console.log('QB button clicked');
+    fetch('/start_quickbooks_operations/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')  // Add this line for CSRF protection
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.redirect) {
+        window.location.href = data.redirect;
+      } else if (data.error) {
+        alert('Error: ' + data.error);
+      } else {
+        // Handle successful response
+        document.getElementById('aioutput').innerHTML = data.message;
+        // If you have charts, you might want to update them here as well
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('An error occurred. Please try again.');
+    });
+  });
+
+  // Add this function to get the CSRF token
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  /*
 dropZone.addEventListener('dragover', function(e) {
   e.preventDefault();
   e.stopPropagation();
   e.dataTransfer.dropEffect = 'copy';
 });
-
 
 dropZone.addEventListener('drop', function(e) {
   e.preventDefault();
@@ -173,6 +221,8 @@ dropZone.addEventListener('drop', function(e) {
   }
 });
 
+
+
 function checkInputs2() {
   var rowNumber = rowNumberInput.value;
   if (file && rowNumber) {
@@ -185,9 +235,8 @@ function checkInputs2() {
 }
 
 
-
     fileInput.addEventListener('change', checkInputs);
-    rowNumberInput.addEventListener('input', checkInputs);
+    //rowNumberInput.addEventListener('input', checkInputs);
 
     // Call checkInputs to set the initial state of the button
     checkInputs();
@@ -212,6 +261,11 @@ function checkInputs2() {
         uploadButton.disabled = true;
       }
     }
+*/
+    
+
+
+
 
 
 /*
@@ -293,9 +347,14 @@ var uploadButton = document.getElementById('uploadButton');
 */
 
 
+
+
+
+
   </script>
 
   <script>
+    /*
     //to use later 
   function getCookie(name) {
   var cookieValue = null;
@@ -343,6 +402,7 @@ var uploadButton = document.getElementById('uploadButton');
     })
     .catch(error => console.error('Error:', error));  // Debugging line
   });
+  */
 
   </script>
 

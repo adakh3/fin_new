@@ -4,16 +4,16 @@ from quickbooks.objects.customer import Customer
 from intuitlib.client import AuthClient
 from django.conf import settings
 from datetime import datetime, timedelta
-
-
-
 import os
 import pdb
+import pandas as pd
+#from quickbooks.objects import Report
 
 class QuickbooksIntegrator:
 
     def __init__(self, refresh_token, realm_id):
 
+        #at the moment connects to my company sandbox, and later will connect to the prod company of my users through oAuth2
         self.auth_client = AuthClient(
         client_id = settings.QUICKBOOKS_CLIENT_ID,
         client_secret=settings.QUICKBOOKS_CLIENT_SECRET,
@@ -25,7 +25,7 @@ class QuickbooksIntegrator:
             auth_client=self.auth_client,
             refresh_token=refresh_token,
             company_id=realm_id,
-            minorversion=62
+            minorversion=62 
         )
 
 
@@ -58,22 +58,22 @@ class QuickbooksIntegrator:
         try:
             # Attempt to get the trial balance
             #trial_balance = self.client.get_report('TrialBalance', params=params)
-                    # Fetch the Trial Balance report
-            
-            #print qb.get_report('ProfitAndLoss','summarize_column_by=Month&start_date=2014-01-01&end_date=2014-12-31')
+                    # Fetch the report
             params = {
                 'start_date': start_date,
                 'end_date': end_date,
-                }
+                'summarize_column_by': 'Month'
+            }
+            
+            print(self.client.get_report(reportName, qs=params))
 
-            trial_balance = self.client.get_report(report_type=reportName, qs=params)
-            return trial_balance
+            report = self.client.get_report(report_type=reportName, qs=params)
+            return report
         except Exception as e:
             # If we get an UnauthorizedException, the access token has expired
             self.refresh_and_store_tokens()
 
             # Retry the call
-
             #trial_balance = self.client.get_report('TrialBalance', params=params)
             '''
             trial_balance = self.client.get_report(
@@ -84,3 +84,28 @@ class QuickbooksIntegrator:
             trial_balance = self.client.get_report(report_type=reportName, qs=params)
 
             return trial_balance
+
+    def get_profit_and_loss(self, start_date, end_date):
+        try:
+            params = {
+                'start_date': start_date,
+                'end_date': end_date,
+                'summarize_column_by': 'Month'
+            }
+            
+            report = self.getReport(reportName='ProfitAndLoss', start_date=start_date, end_date=end_date)
+            
+            # Convert the report data to a pandas DataFrame
+            data = []
+            for row in report['Rows']['Row']:
+                if 'ColData' in row:
+                    data.append({
+                        'Account': row['ColData'][0]['value'],
+                        'Amount': row['ColData'][1]['value'] if len(row['ColData']) > 1 else None
+                    })
+            
+            df = pd.DataFrame(data)
+            return df
+        except Exception as e:
+            print(f"Error occurred while getting Profit and Loss report: {str(e)}")
+            return None

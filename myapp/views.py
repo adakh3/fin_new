@@ -140,22 +140,40 @@ def handle_file(f, request, row_number):
     #else:
     return results, my_object.charts
 
-
-
-def start_quickbooks_auth(request):
-    qb_auth = AccountsIntegrator()
-    auth_url = qb_auth.get_authorization_url()
-    return redirect(auth_url)
-
-
-# views.py continued
+@csrf_exempt
+@require_POST
+def start_quickbooks_operations(request):
+    print("Starting QuickBooks operations...")
+    qb_auth = QuickbooksAuth()
+    
+    if qb_auth.has_valid_token():
+        try:
+            qb_integrator = QuickbooksIntegrator(qb_auth.get_access_token(), settings.QUICKBOOKS_REALM_ID)
+            pl_data = qb_integrator.get_profit_and_loss()
+            
+            handler = HandlePLData(qb_data=pl_data)
+            results = handler.main(
+                insights_preference='All',
+                industry='General',
+                additionalInfo='',
+                row_number=0
+            )
+            
+            return JsonResponse({'message': results, 'charts': handler.charts})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+    else:
+        auth_url = qb_auth.get_auth_url()
+        return JsonResponse({'redirect': auth_url})
 
 def quickbooks_callback(request):
     auth_code = request.GET.get('code')
     if auth_code:
-        qb_auth = AccountsIntegrator()
-        access_token = qb_auth.get_bearer_token(auth_code)
+        qb_auth = QuickbooksAuth()
+        access_token = qb_auth.exchange_code_for_token(auth_code)
         # Store this access token securely for future API calls
-        return HttpResponse("QuickBooks Connected Successfully!")
+        return redirect('upload_file_view')  # Redirect to your main page
     else:
         return HttpResponse("Error connecting to QuickBooks", status=400)
+
+# Remove start_quickbooks_auth and process_quickbooks_data functions if they're not used elsewhere
