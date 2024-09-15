@@ -7,24 +7,20 @@ from datetime import datetime, timedelta
 import os
 import pdb
 import pandas as pd
+from .quickbooks_auth import QuickbooksAuth
 #from quickbooks.objects import Report
 
 class QuickbooksIntegrator:
 
-    def __init__(self, refresh_token, realm_id):
+    #def __init__(self, refresh_token, realm_id):
+    def __init__(self, qbAuth: QuickbooksAuth):
 
         #at the moment connects to my company sandbox, and later will connect to the prod company of my users through oAuth2
-        self.auth_client = AuthClient(
-        client_id = settings.QUICKBOOKS_CLIENT_ID,
-        client_secret=settings.QUICKBOOKS_CLIENT_SECRET,
-        redirect_uri=settings.QB_REDIRECT_URL,
-        environment='sandbox'  # or 'production'
-        )
-
+        self.auth_client = qbAuth.auth_client
         self.client = QuickBooks(
             auth_client=self.auth_client,
-            refresh_token=refresh_token,
-            company_id=realm_id,
+            refresh_token=qbAuth.refresh_token,
+            company_id=qbAuth.realm_id,
             minorversion=62 
         )
 

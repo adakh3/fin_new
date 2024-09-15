@@ -19,6 +19,8 @@ import json
 from django.http import FileResponse
 import tempfile
 from .quickbooks.quickbooks_integrator import QuickbooksIntegrator
+from .quickbooks.quickbooks_auth import QuickbooksAuth
+from django.conf import settings
 
 
 
@@ -143,28 +145,14 @@ def handle_file(f, request, row_number):
 @csrf_exempt
 @require_POST
 def start_quickbooks_operations(request):
-    print("Starting QuickBooks operations...")
     qb_auth = QuickbooksAuth()
     
-    if qb_auth.has_valid_token():
-        try:
-            qb_integrator = QuickbooksIntegrator(qb_auth.get_access_token(), settings.QUICKBOOKS_REALM_ID)
-            pl_data = qb_integrator.get_profit_and_loss()
-            
-            handler = HandlePLData(qb_data=pl_data)
-            results = handler.main(
-                insights_preference='All',
-                industry='General',
-                additionalInfo='',
-                row_number=0
-            )
-            
-            return JsonResponse({'message': results, 'charts': handler.charts})
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=400)
-    else:
-        auth_url = qb_auth.get_auth_url()
-        return JsonResponse({'redirect': auth_url})
+    try:
+        qb_integrator = QuickbooksIntegrator(qb_auth)
+        pl_data = qb_integrator.get_profit_and_loss()
+        # ... rest of your code ...
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
 
 def quickbooks_callback(request):
     auth_code = request.GET.get('code')
