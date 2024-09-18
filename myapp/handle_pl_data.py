@@ -51,7 +51,7 @@ class HandlePLData:
 
     def __init__(self, filename=None, qb_data=None):
         self.filepath = 'uploaded_files/' + filename if filename else None
-        self.filename = filename
+        self.filename = filename if filename is not None else 'default_filename.xlsx'
         self.qb_data = qb_data
         self.aiModel = "gpt-4o-mini"
 
@@ -145,6 +145,12 @@ class HandlePLData:
         self.dateColumnCount = len(indices)
         if self.dateColumnCount == 0:
             raise Exception("File does not contain any valid accounting periods. Make sure you have provided the correct row number.")
+
+
+        # Convert all null values to zeros
+        data = data.fillna(0)
+        print('Null values converted to zeros ' + str(datetime.now().time()))
+        print(data)
 
 
         # Select and clean specific columns
@@ -252,9 +258,25 @@ class HandlePLData:
 
             if (dataDates.isna() | (dataDates == 0)).all().all():
                 return None
-            
+
+
+
             for col in dataDates.columns:
-                dataDates[col] = dataDates[col].apply(lambda x: f'{x:,.2f}' if x >= 0 else f'({abs(x):,.2f})')
+                
+                dataDates[col] = dataDates[col].apply(lambda x: self.format_value(x))
+                #print('Formatting output ' + dataDates[col].head(10))
+
+            '''
+            for col in dataDates.columns:
+                dataDates[col] = dataDates[col].apply(lambda x: f'{float(x):,.2f}' if float(x) >= 0 else f'({abs(float(x)):,.2f})')
+                '''    
+            
+             # Apply the changes back to the original data DataFrame
+            data.iloc[:, indices] = dataDates
+
+            print('Before number conversion ' + dataDates[col].head(10))
+            data = self.convert_numeric_strings(data)
+            print('After number conversion ' + dataDates[col].head(10))
 
             data_mask = data.iloc[:, [0] + indices]
             return data[data_mask.columns]
@@ -262,6 +284,32 @@ class HandlePLData:
             print('An error occered while preparing data')
             return None
 
+    def format_value(self, x):
+        try:
+            if x == '' or pd.isna(x):
+                return '0.00'
+            x = float(x)
+            return f'{x:,.2f}' if x >= 0 else f'({abs(x):,.2f})'
+        except ValueError:
+            return x  # Return the original value if it cannot be converted to float
+        
+    def convert_numeric_strings(self, df):
+        """
+        Convert number-based strings in a DataFrame to numeric types.
+        """
+        def convert_value(x):
+            try:
+                # Handle negative numbers in parentheses
+                if isinstance(x, str) and x.startswith('(') and x.endswith(')'):
+                    x = '-' + x[1:-1].replace(',', '')
+                # Remove commas and convert to float
+                return float(x.replace(',', ''))
+            except (ValueError, AttributeError):
+                return x  # Return the original value if it cannot be converted to float
+
+        for col in df.columns:
+            df[col] = df[col].apply(convert_value)
+        return df
 
     def clean_accounts_column(self, data: pd.DataFrame) -> pd.DataFrame:
         try:
@@ -546,26 +594,20 @@ class HandlePLData:
         return best_row
 
     #main function that is called from the view and handles all the data processing and analysis
-    def main(self, insights_preference, industry, additionalInfo, row_number):
-
-        
-        #if data is already loaded from quickbooks, return that 
+    def main(self, insights_preference, industry, additionalInfo):
         if self.qb_data is not None:
-            df = self.qb_data
+            data = self.qb_data
+            i =0
         else:
             try:
-                self.file_content_check()   
+                self.file_content_check()
+                i = self.find_data_start(pd.read_excel(self.filepath)) 
+                if i is None:
+                    raise Exception("File does not contain valid data. Please upload a file with valid P&L data.")
             except Exception as e:
                 raise ValueError(str(e)) from e
-            df = pd.read_excel(self.filepath)
-        
-        #calling all the functions now 
-        i = self.find_data_start(df, row_number) 
-        if (i is None):
-            raise Exception("File does not contain valid data. Please upload a file with valid P&L data.")
-
-        data = self.load_data_table(i)
-
+            
+        data = self.load_data_table(i) 
         print('Data loaded ' + str(datetime.now().time()))
 
         data = self.clean_and_prepare_data(data)

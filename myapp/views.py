@@ -21,7 +21,9 @@ import tempfile
 from .quickbooks.quickbooks_integrator import QuickbooksIntegrator
 from .quickbooks.quickbooks_auth import QuickbooksAuth
 from django.conf import settings
-
+from intuitlib.exceptions import AuthClientError
+from django.utils.safestring import mark_safe
+from django.utils.html import strip_tags
 
 
 #@login_required
@@ -110,15 +112,11 @@ def save_as_pdf(request):
     # Return the PDF file as a response
     return FileResponse(temp, as_attachment=True, filename='aioutput.pdf')
 
-def handle_file(f, request, row_number):
-#if the file is an excel file, then we upload it and start, else send an error message
-    
+def handle_file(f, request):
     try:
         file_sanitiser(f)
     except Exception as e:
         raise ValueError(str(e)) from e
-        #return str(e)
-        
     
     if not os.path.exists('uploaded_files'):
         os.makedirs('uploaded_files')
@@ -149,10 +147,37 @@ def start_quickbooks_operations(request):
     
     try:
         qb_integrator = QuickbooksIntegrator(qb_auth)
-        pl_data = qb_integrator.get_profit_and_loss()
-        # ... rest of your code ...
+        pl_data = qb_integrator.get_report('ProfitAndLoss', start_date='2024-01-01', end_date='2024-01-31')
+        
+        # Create HandlePLData instance with QuickBooks data
+        my_object = HandlePLData(qb_data=pl_data)
+        
+        # Call main function with appropriate parameters
+        insights_preference = request.POST.get('insights', 'All')
+        industry = request.POST.get('industry', '')
+        additional_info = request.POST.get('additional_info', '')
+        
+        results = my_object.main(insights_preference, industry, additional_info)
+        
+        if(results is not None):
+            #results = strip_tags(results)  # This will remove any HTML tags
+            results = TextFormatter.convert_markdown_to_html(results)
+        
+        return JsonResponse({
+            'success': True,
+            'results': mark_safe(results),
+            'charts': [mark_safe(chart) for chart in my_object.charts]
+        }, safe = False)
+        
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
+
+    '''        
+    except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+
+    return JsonResponse({'results': results, 'charts': my_object.charts})
+    '''
 
 def quickbooks_callback(request):
     auth_code = request.GET.get('code')

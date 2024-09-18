@@ -33,13 +33,9 @@ class QuickbooksAuth:
         )
         # Use your development tokens here
         self.realm_id = settings.QUICKBOOKS_REALM_ID
-        self.access_token = settings.QUICKBOOKS_ACCESS_TOKEN
         self.refresh_token = settings.QUICKBOOKS_REFRESH_TOKEN
-        self.auth_client.access_token = self.access_token
         self.auth_client.refresh_token = self.refresh_token
-        self.environment = settings.QB_APP_ENV
 
-    
     def has_valid_token(self):
         return True  # Always return True for development tokens
 
@@ -88,3 +84,9 @@ class QuickbooksAuth:
         )
         customers = Customer.all(quickbooks_client)
         return customers
+
+    def refresh_tokens(self):
+        self.auth_client.refresh()
+        # Update the refresh token in settings or database
+        # This is just an example, implement secure storage as per your needs
+        settings.QUICKBOOKS_REFRESH_TOKEN = self.auth_client.refresh_token

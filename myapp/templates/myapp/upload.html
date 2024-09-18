@@ -158,30 +158,69 @@
 
 
   qbButton.addEventListener('click', function(e) {
-    console.log('QB button clicked');
-    fetch('/start_quickbooks_operations/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': getCookie('csrftoken')  // Add this line for CSRF protection
-      }
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.redirect) {
-        window.location.href = data.redirect;
-      } else if (data.error) {
-        alert('Error: ' + data.error);
-      } else {
-        // Handle successful response
-        document.getElementById('aioutput').innerHTML = data.message;
-        // If you have charts, you might want to update them here as well
-      }
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      alert('An error occurred. Please try again.');
-    });
+      console.log('QB button clicked');
+      
+      // Show loading message
+      document.getElementById('loading').style.display = 'block';
+      
+      fetch('/start_quickbooks_operations/', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify({
+              insights: document.getElementById('insights').value,
+              industry: document.getElementById('industry-dropdown').value,
+              additional_info: document.getElementById('additional_info').value
+          })
+      })
+      .then(response => response.json())
+      .then(data => {
+          // Hide loading message
+          document.getElementById('loading').style.display = 'none';
+          
+          if (data.error) {
+              alert('Error: ' + data.error);
+          } else {
+              const outputDiv = document.getElementById('aioutput');
+              outputDiv.innerHTML = ''; // Clear previous content
+
+              // Display results
+              if (data.results) {
+                  const resultsDiv = document.createElement('div');
+                  resultsDiv.innerHTML = data.results;
+                  outputDiv.appendChild(resultsDiv);
+              }
+
+              // Display charts
+              if (data.charts && data.charts.length > 0) {
+                  console.log('Displaying charts');
+                  const chartsDiv = document.createElement('div');
+                  chartsDiv.id = 'charts-container';
+                  data.charts.forEach(chartHtml => {
+                      const chartDiv = document.createElement('div');
+                      chartDiv.innerHTML = chartHtml;
+                      chartsDiv.appendChild(chartDiv);
+                  });
+                  outputDiv.appendChild(chartsDiv);
+
+                  // Ensure any scripts in the inserted content are executed
+                  outputDiv.querySelectorAll('script').forEach(script => {
+                      const newScript = document.createElement('script');
+                      newScript.text = script.innerHTML;
+                      script.parentNode.replaceChild(newScript, script);
+                  });
+              }
+          }
+      })
+      .catch(error => {
+          // Hide loading message in case of error
+          document.getElementById('loading').style.display = 'none';
+          
+          console.error('Error:', error);
+          alert('An error occurred. Please try again.');
+      });
   });
 
   // Add this function to get the CSRF token
