@@ -15,19 +15,9 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
-from myapp.views import upload_file_view
-from django.contrib.auth import views as auth_views
-from myapp import views
-
+from django.urls import include, path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', upload_file_view, name='home'),
-    path('login/', auth_views.LoginView.as_view(), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(), name='after_logout'),
-    path('register/', views.register, name='register'),
-    path('start_quickbooks_operations/', views.start_quickbooks_operations, name='start_quickbooks_operations'),
-    path('quickbooks/callback/', views.quickbooks_callback, name='quickbooks_callback'),
-    # Remove the path for start_quickbooks_auth if it's no longer used
+    path('', include('myapp.urls')),  # This includes all your app's URLs
 ]

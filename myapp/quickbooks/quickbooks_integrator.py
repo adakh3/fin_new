@@ -131,3 +131,43 @@ class QuickbooksIntegrator:
                 account = parent + row['Summary']['ColData'][0]['value']
                 amounts = [col['value'] for col in row['Summary']['ColData'][1:]]
                 data.append([account] + amounts)
+
+    def get_report_with_comparison(self, report_type, start_date, end_date, comparison_start_date, comparison_end_date):
+        # Implementation for comparison with another period
+        report = self.client.get_report(report_type, start_date, end_date)
+        comparison_report = self.client.get_report(report_type, comparison_start_date, comparison_end_date)
+        
+        # Combine the reports and calculate differences
+        # This is a simplified example; you'll need to implement the actual comparison logic
+        combined_report = {
+            'current': report,
+            'comparison': comparison_report,
+            'differences': self._calculate_differences(report, comparison_report)
+        }
+        
+        return combined_report
+
+    def get_report_with_budget(self, report_type, start_date, end_date):
+        # Implementation for comparison with budget
+        report = self.client.get_report(report_type, start_date, end_date)
+        budget_report = self.client.get_report('Budget', start_date, end_date)
+        
+        # Combine the report with budget data
+        # This is a simplified example; you'll need to implement the actual budget comparison logic
+        combined_report = {
+            'actual': report,
+            'budget': budget_report,
+            'variances': self._calculate_budget_variances(report, budget_report)
+        }
+        
+        return combined_report
+
+    def _calculate_differences(self, current_report, comparison_report):
+        # Implement logic to calculate differences between two periods
+        # This is a placeholder and should be replaced with actual implementation
+        return {}
+
+    def _calculate_budget_variances(self, actual_report, budget_report):
+        # Implement logic to calculate variances between actual and budget
+        # This is a placeholder and should be replaced with actual implementation
+        return {}

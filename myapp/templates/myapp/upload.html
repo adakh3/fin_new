@@ -1,135 +1,228 @@
+{% extends 'base.html' %}
 
-<!DOCTYPE html>
-<html>
-<head>
+{% block content %}
 
-  <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-D7VEGMHEPD"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-D7VEGMHEPD');
-</script>
-
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  <!-- Import Playfair Display and Roboto from Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Tiempos+Headline:wght@400;700&family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
-  <!-- Add Bootstrap CSS -->
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-  <!-- Add your custom CSS -->
-  <link rel="stylesheet" href="styles.css">
-
-
-  
-</head>
-<body>
   <div class="container pt-5">
     <h2> Relogue AI<span class="badge badge-warning ml-2 align-middle">Beta</span> </h2>
     <h4>Your AI financial analyst </h4>
     <b>Simply upload a Profit and Loss Statement from Quickbooks (in .xlsx format) comparing two periods, or budgeted vs actual, and get instant insights</b>
-    <form id='yourFormId' method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
-      {% csrf_token %}
-      <!--{{ form.as_p }}-->
-
-      <label for="id_file"> Profit & Loss File:</label>
-      <input type="file" id="id_file" name="file" required>
-      <!--<div id="drop_zone" style="width: 200px; height: 100px; border: 1px solid black;">Drop files here</div>-->
+  
+    <div class="mb-4">
+      <button id="fileUploadBtn" class="btn btn-primary">Upload File</button>
 
 
-      <div class="form-group">
-        <!--label for="row_number">Could you tell us the row number where your column titles are? This is where your data begins in the Excel file (required)</label-->
-        <!--input type="number" id="row_number" name="row_number" min="1" class="form-control" required-->
-      </div>
-      <div class="form-group">
-        <label for="insights">What would you like to analyse?</label>
-        <select name="insights" id="insights" class="form-control">
-          <option value="All">Overall P&L insights</option>
-          <option value="Income">Revenue insights</option>
-          <option value="Cost of Sales">Costs of sales insights</option>
-          <option value="Expenses">Administrative expense insights</option>
-          <!-- Add the rest of your options here -->
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="industry">Pick a relevant industry for more helpful insights</label>
-        <select name="industry" id="industry-dropdown" class="form-control">
-          <option value="all" selected>Other</option>
-          <option value="agriculture">Agriculture</option>
-          <option value="artisanal_foods">Artisanal Foods</option>
-          <option value="arts_crafts">Arts & Crafts</option>
-          <option value="automotive_services">Automotive Services</option>
-          <option value="beauty_care">Beauty Care</option>
-          <option value="cafes">Cafes</option>
-          <option value="catering">Catering</option>
-          <option value="childcare">Childcare</option>
-          <option value="cleaning_services">Cleaning Services</option>
-          <option value="consulting">Consulting</option>
-          <option value="design_services">Design Services</option>
-          <option value="education">Education</option>
-          <option value="entertainment">Entertainment</option>
-          <option value="event_planning">Event Planning</option>
-          <option value="fashion_retail">Fashion Retail</option>
-          <option value="financial_services">Financial Services</option>
-          <option value="fitness_wellness">Fitness & Wellness</option>
-          <option value="florists">Florists</option>
-          <option value="food_trucks">Food Trucks</option>
-          <option value="gardening">Gardening</option>
-          <option value="grocery_stores">Grocery Stores</option>
-          <option value="handyman_services">Handyman Services</option>
-          <option value="healthcare_clinics">Healthcare Clinics</option>
-          <option value="home_decor">Home Decor</option>
-          <option value="hospitality">Hospitality</option>
-          <option value="it_services">IT Services</option>
-          <option value="jewelry">Jewelry</option>
-          <option value="landscaping">Landscaping</option>
-          <option value="laundry_services">Laundry Services</option>
-          <option value="legal_services">Legal Services</option>
-          <option value="manufacturing">Manufacturing</option>
-          <option value="marketing_advertising">Marketing & Advertising</option>
-          <option value="massage_therapy">Massage Therapy</option>
-          <option value="music_entertainment">Music & Entertainment</option>
-          <option value="pet_services">Pet Services</option>
-          <option value="photography">Photography</option>
-          <option value="plumbing">Plumbing</option>
-          <option value="real_estate">Real Estate</option>
-          <option value="restaurants">Restaurants</option>
-          <option value="salons">Salons</option>
-          <option value="software_development">Software Development</option>
-          <option value="sports_recreation">Sports & Recreation</option>
-          <option value="tailoring">Tailoring</option>
-          <option value="tech_repair">Tech Repair</option>
-          <option value="transportation">Transportation</option>
-          <option value="travel_agencies">Travel Agencies</option>
-          <option value="tutoring_services">Tutoring Services</option>
-          <option value="veterinary_services">Veterinary Services</option>
-          <option value="web_design">Web Design</option>
-          <option value="wedding_services">Wedding Services</option>
-          <option value="yoga_studios">Yoga Studios</option>
-      </select>
-      </div>
+    {% if user.is_authenticated %}
+      {% if user.userprofile.quickbooks_access_token %}
+        <button id="quickbooksBtn" class="btn btn-secondary">Use QuickBooks</button>
+      {% else %}
+        <a href="{% url 'start_quickbooks_auth' %}" class="btn btn-secondary">Connect QuickBooks</a>
+      {% endif %}
+    {% else %}
+      <a href="{% url 'login' %}" class="btn btn-secondary">Login for QuickBooks</a>
+    {% endif %}
+    
+    
+    </div>
 
-      <div class="form-group">
-        <label for="additional_info">Additional information about this P&L that might give helpful context (highly recommended for better analysis)</label>
-        <textarea id="additional_info" name="additional_info" class="form-control" rows="3" maxlength="250"></textarea>
-      </div>
+    <div id="fileUploadForm" style="display: none;">
+      <form id='fileForm' method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+        {% csrf_token %}
+        <label for="id_file"> Profit & Loss File:</label>
+        <input type="file" id="id_file" name="file" required>
+        <div class="form-group">
+          <label for="insights">What would you like to analyse?</label>
+          <select name="insights" id="insights" class="form-control">
+            <option value="All">Overall P&L insights</option>
+            <option value="Income">Revenue insights</option>
+            <option value="Cost of Sales">Costs of sales insights</option>
+            <option value="Expenses">Administrative expense insights</option>
+            <!-- Add the rest of your options here -->
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="industry">Pick a relevant industry for more helpful insights</label>
+          <select name="industry" id="industry-dropdown" class="form-control">
+            <option value="all" selected>Other</option>
+            <option value="agriculture">Agriculture</option>
+            <option value="artisanal_foods">Artisanal Foods</option>
+            <option value="arts_crafts">Arts & Crafts</option>
+            <option value="automotive_services">Automotive Services</option>
+            <option value="beauty_care">Beauty Care</option>
+            <option value="cafes">Cafes</option>
+            <option value="catering">Catering</option>
+            <option value="childcare">Childcare</option>
+            <option value="cleaning_services">Cleaning Services</option>
+            <option value="consulting">Consulting</option>
+            <option value="design_services">Design Services</option>
+            <option value="education">Education</option>
+            <option value="entertainment">Entertainment</option>
+            <option value="event_planning">Event Planning</option>
+            <option value="fashion_retail">Fashion Retail</option>
+            <option value="financial_services">Financial Services</option>
+            <option value="fitness_wellness">Fitness & Wellness</option>
+            <option value="florists">Florists</option>
+            <option value="food_trucks">Food Trucks</option>
+            <option value="gardening">Gardening</option>
+            <option value="grocery_stores">Grocery Stores</option>
+            <option value="handyman_services">Handyman Services</option>
+            <option value="healthcare_clinics">Healthcare Clinics</option>
+            <option value="home_decor">Home Decor</option>
+            <option value="hospitality">Hospitality</option>
+            <option value="it_services">IT Services</option>
+            <option value="jewelry">Jewelry</option>
+            <option value="landscaping">Landscaping</option>
+            <option value="laundry_services">Laundry Services</option>
+            <option value="legal_services">Legal Services</option>
+            <option value="manufacturing">Manufacturing</option>
+            <option value="marketing_advertising">Marketing & Advertising</option>
+            <option value="massage_therapy">Massage Therapy</option>
+            <option value="music_entertainment">Music & Entertainment</option>
+            <option value="pet_services">Pet Services</option>
+            <option value="photography">Photography</option>
+            <option value="plumbing">Plumbing</option>
+            <option value="real_estate">Real Estate</option>
+            <option value="restaurants">Restaurants</option>
+            <option value="salons">Salons</option>
+            <option value="software_development">Software Development</option>
+            <option value="sports_recreation">Sports & Recreation</option>
+            <option value="tailoring">Tailoring</option>
+            <option value="tech_repair">Tech Repair</option>
+            <option value="transportation">Transportation</option>
+            <option value="travel_agencies">Travel Agencies</option>
+            <option value="tutoring_services">Tutoring Services</option>
+            <option value="veterinary_services">Veterinary Services</option>
+            <option value="web_design">Web Design</option>
+            <option value="wedding_services">Wedding Services</option>
+            <option value="yoga_studios">Yoga Studios</option>
+          </select>
+        </div>
 
-      <!-- Add the rest of your form fields here -->
-      <div class="button-container mb-3">
+        <div class="form-group">
+          <label for="additional_info">Additional information about this P&L that might give helpful context (highly recommended for better analysis)</label>
+          <textarea id="additional_info" name="additional_info" class="form-control" rows="3" maxlength="250"></textarea>
+        </div>
+
         <button type="submit" id="uploadButton" class="btn btn-primary">Upload</button>
-        <button type="button" id="qbButton" class="btn btn-secondary">My Quickbooks P&L</button>
-      </div>
+      </form>
+    </div>
 
-    </form>
+    <div id="quickbooksForm" style="display: none;">
+      <form id='qbForm' class="needs-validation" novalidate>
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="qb_report">Report Type:</label>
+          <select id="qb_report" name="qb_report" class="form-control" required>
+            <option value="ProfitAndLoss">Profit and Loss</option>
+            <option value="BalanceSheet">Balance Sheet</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="qb_comparison_type">Comparison Type:</label>
+          <select id="qb_comparison_type" name="qb_comparison_type" class="form-control" required>
+            <option value="none">No Comparison</option>
+            <option value="period">Compare with Another Period</option>
+            <option value="budget">Compare with Budget</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="qb_start_date">Start Date:</label>
+          <input type="date" id="qb_start_date" name="qb_start_date" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="qb_end_date">End Date:</label>
+          <input type="date" id="qb_end_date" name="qb_end_date" class="form-control" required>
+        </div>
+        <div id="comparison_period_fields" style="display: none;">
+          <div class="form-group">
+            <label for="qb_comparison_start_date">Comparison Start Date:</label>
+            <input type="date" id="qb_comparison_start_date" name="qb_comparison_start_date" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="qb_comparison_end_date">Comparison End Date:</label>
+            <input type="date" id="qb_comparison_end_date" name="qb_comparison_end_date" class="form-control">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="qb_insights">What would you like to analyse?</label>
+          <select name="insights" id="qb_insights" class="form-control">
+            <option value="All">Overall P&L insights</option>
+            <option value="Income">Revenue insights</option>
+            <option value="Cost of Sales">Costs of sales insights</option>
+            <option value="Expenses">Administrative expense insights</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="qb_industry-dropdown">Pick a relevant industry for more helpful insights</label>
+          <select name="industry" id="qb_industry-dropdown" class="form-control">
+            <option value="all" selected>Other</option>
+            <option value="agriculture">Agriculture</option>
+            <option value="artisanal_foods">Artisanal Foods</option>
+            <option value="arts_crafts">Arts & Crafts</option>
+            <option value="automotive_services">Automotive Services</option>
+            <option value="beauty_care">Beauty Care</option>
+            <option value="cafes">Cafes</option>
+            <option value="catering">Catering</option>
+            <option value="childcare">Childcare</option>
+            <option value="cleaning_services">Cleaning Services</option>
+            <option value="consulting">Consulting</option>
+            <option value="design_services">Design Services</option>
+            <option value="education">Education</option>
+            <option value="entertainment">Entertainment</option>
+            <option value="event_planning">Event Planning</option>
+            <option value="fashion_retail">Fashion Retail</option>
+            <option value="financial_services">Financial Services</option>
+            <option value="fitness_wellness">Fitness & Wellness</option>
+            <option value="florists">Florists</option>
+            <option value="food_trucks">Food Trucks</option>
+            <option value="gardening">Gardening</option>
+            <option value="grocery_stores">Grocery Stores</option>
+            <option value="handyman_services">Handyman Services</option>
+            <option value="healthcare_clinics">Healthcare Clinics</option>
+            <option value="home_decor">Home Decor</option>
+            <option value="hospitality">Hospitality</option>
+            <option value="it_services">IT Services</option>
+            <option value="jewelry">Jewelry</option>
+            <option value="landscaping">Landscaping</option>
+            <option value="laundry_services">Laundry Services</option>
+            <option value="legal_services">Legal Services</option>
+            <option value="manufacturing">Manufacturing</option>
+            <option value="marketing_advertising">Marketing & Advertising</option>
+            <option value="massage_therapy">Massage Therapy</option>
+            <option value="music_entertainment">Music & Entertainment</option>
+            <option value="pet_services">Pet Services</option>
+            <option value="photography">Photography</option>
+            <option value="plumbing">Plumbing</option>
+            <option value="real_estate">Real Estate</option>
+            <option value="restaurants">Restaurants</option>
+            <option value="salons">Salons</option>
+            <option value="software_development">Software Development</option>
+            <option value="sports_recreation">Sports & Recreation</option>
+            <option value="tailoring">Tailoring</option>
+            <option value="tech_repair">Tech Repair</option>
+            <option value="transportation">Transportation</option>
+            <option value="travel_agencies">Travel Agencies</option>
+            <option value="tutoring_services">Tutoring Services</option>
+            <option value="veterinary_services">Veterinary Services</option>
+            <option value="web_design">Web Design</option>
+            <option value="wedding_services">Wedding Services</option>
+            <option value="yoga_studios">Yoga Studios</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="qb_additional_info">Additional information about this P&L that might give helpful context (highly recommended for better analysis)</label>
+          <textarea id="qb_additional_info" name="additional_info" class="form-control" rows="3" maxlength="250"></textarea>
+        </div>
+
+        <button type="submit" id="qbButton" class="btn btn-primary">Analyze QuickBooks Data</button>
+      </form>
+    </div>
+
     {% if error %}
     <p class="error">{{ error }}</p>
     {% endif %}
     <div id='aioutput'class="output-box p-3 mb-2 bg-light text-dark border d-flex flex-column" style="min-height: 50vh;">
-      <div id="loading" style="display: none;">Analysing your data. This may take a few seconds. Please do not refresh the browser...</div>
+      <div id="loading" style="display: none;">AI is preparing results...</div>
       {% if charts %}
       {% for chart in charts %}
         {{ chart|safe }}
@@ -148,79 +241,110 @@
 
   <script>
 
+  document.getElementById('fileUploadBtn').addEventListener('click', function() {
+    document.getElementById('fileUploadForm').style.display = 'block';
+    document.getElementById('quickbooksForm').style.display = 'none';
+  });
+
+  document.getElementById('quickbooksBtn').addEventListener('click', function() {
+    document.getElementById('quickbooksForm').style.display = 'block';
+    document.getElementById('fileUploadForm').style.display = 'none';
+  });
+
   var uploadButton = document.getElementById('uploadButton');
   var qbButton = document.getElementById('qbButton');
   var fileInput = document.getElementById('id_file'); // Assuming 'id_file' is the id of your file input field
-  //var rowNumberInput = document.getElementById('row_number');
-  var dropZone = document.getElementById('drop_zone');
   var file;
 
+  document.getElementById('qb_comparison_type').addEventListener('change', function() {
+    var comparisonFields = document.getElementById('comparison_period_fields');
+    if (this.value === 'period') {
+      comparisonFields.style.display = 'block';
+    } else {
+      comparisonFields.style.display = 'none';
+    }
+  });
 
-
-  qbButton.addEventListener('click', function(e) {
-      console.log('QB button clicked');
+  document.getElementById('qbForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    console.log('QB form submitted');
       
-      // Show loading message
-      document.getElementById('loading').style.display = 'block';
-      
-      fetch('/start_quickbooks_operations/', {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-              'X-CSRFToken': getCookie('csrftoken')
-          },
-          body: JSON.stringify({
-              insights: document.getElementById('insights').value,
-              industry: document.getElementById('industry-dropdown').value,
-              additional_info: document.getElementById('additional_info').value
-          })
-      })
-      .then(response => response.json())
-      .then(data => {
-          // Hide loading message
-          document.getElementById('loading').style.display = 'none';
-          
-          if (data.error) {
-              alert('Error: ' + data.error);
-          } else {
-              const outputDiv = document.getElementById('aioutput');
-              outputDiv.innerHTML = ''; // Clear previous content
+    // Show loading message
+    document.getElementById('loading').style.display = 'block';
+    
+    const formData = {
+        report_type: document.getElementById('qb_report').value,
+        comparison_type: document.getElementById('qb_comparison_type').value,
+        start_date: document.getElementById('qb_start_date').value,
+        end_date: document.getElementById('qb_end_date').value,
+        insights: document.getElementById('qb_insights').value,
+        industry: document.getElementById('qb_industry-dropdown').value,
+        additional_info: document.getElementById('qb_additional_info').value
+    };
+    
+    if (formData.comparison_type === 'period') {
+        formData.comparison_start_date = document.getElementById('qb_comparison_start_date').value;
+        formData.comparison_end_date = document.getElementById('qb_comparison_end_date').value;
+    }
+    
+    console.log('Form data:', formData);
+    
+    fetch('/quickbooks_report_analysis/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Received data:', data);
+        // Hide loading message
+        document.getElementById('loading').style.display = 'none';
+        
+        if (data.error) {
+            alert('Error: ' + data.error);
+        } else {
+            const outputDiv = document.getElementById('aioutput');
+            outputDiv.innerHTML = ''; // Clear previous content
 
-              // Display results
-              if (data.results) {
-                  const resultsDiv = document.createElement('div');
-                  resultsDiv.innerHTML = data.results;
-                  outputDiv.appendChild(resultsDiv);
-              }
+            // Display results
+            if (data.results) {
+                const resultsDiv = document.createElement('div');
+                resultsDiv.innerHTML = data.results;
+                outputDiv.appendChild(resultsDiv);
+            }
 
-              // Display charts
-              if (data.charts && data.charts.length > 0) {
-                  console.log('Displaying charts');
-                  const chartsDiv = document.createElement('div');
-                  chartsDiv.id = 'charts-container';
-                  data.charts.forEach(chartHtml => {
-                      const chartDiv = document.createElement('div');
-                      chartDiv.innerHTML = chartHtml;
-                      chartsDiv.appendChild(chartDiv);
-                  });
-                  outputDiv.appendChild(chartsDiv);
+            // Display charts
+            if (data.charts && data.charts.length > 0) {
+                console.log('Displaying charts');
+                const chartsDiv = document.createElement('div');
+                chartsDiv.id = 'charts-container';
+                data.charts.forEach(chartHtml => {
+                    const chartDiv = document.createElement('div');
+                    chartDiv.innerHTML = chartHtml;
+                    chartsDiv.appendChild(chartDiv);
+                });
+                outputDiv.appendChild(chartsDiv);
 
-                  // Ensure any scripts in the inserted content are executed
-                  outputDiv.querySelectorAll('script').forEach(script => {
-                      const newScript = document.createElement('script');
-                      newScript.text = script.innerHTML;
-                      script.parentNode.replaceChild(newScript, script);
-                  });
-              }
-          }
-      })
-      .catch(error => {
-          // Hide loading message in case of error
-          document.getElementById('loading').style.display = 'none';
-          
-          console.error('Error:', error);
-          alert('An error occurred. Please try again.');
-      });
+                // Ensure any scripts in the inserted content are executed
+                outputDiv.querySelectorAll('script').forEach(script => {
+                    const newScript = document.createElement('script');
+                    newScript.text = script.innerHTML;
+                    script.parentNode.replaceChild(newScript, script);
+                });
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('loading').style.display = 'none';
+        alert('An error occurred. Please try again.');
+    });
   });
 
   // Add this function to get the CSRF token
@@ -239,216 +363,13 @@
     return cookieValue;
   }
 
-  /*
-dropZone.addEventListener('dragover', function(e) {
-  e.preventDefault();
-  e.stopPropagation();
-  e.dataTransfer.dropEffect = 'copy';
-});
 
-dropZone.addEventListener('drop', function(e) {
-  e.preventDefault();
-  e.stopPropagation();
-  if (e.dataTransfer.files.length > 0) {
-    file = e.dataTransfer.files[0];
-    console.log('File dropped: ', file);
-    // Truncate the file name if it's longer than 20 characters
-    var fileName = file.name.length > 20 ? file.name.substring(0, 20) + '...' : file.name;
-    // Update the drop zone with the file name and an icon
-    dropZone.innerHTML = '<i class="fas fa-file"></i> ' + fileName;
-    checkInputs2();
-  }
-});
-
-
-
-function checkInputs2() {
-  var rowNumber = rowNumberInput.value;
-  if (file && rowNumber) {
-    console.log('Both file and row number are present');
-    uploadButton.disabled = false;
-  } else {
-    console.log('Either file or row number is missing');
-    uploadButton.disabled = true;
-  }
-}
-
-
-    fileInput.addEventListener('change', checkInputs);
-    //rowNumberInput.addEventListener('input', checkInputs);
-
-    // Call checkInputs to set the initial state of the button
-    checkInputs();
-
-    //submit the form and show the loading message
-    document.getElementById('yourFormId').addEventListener('submit', function() {
-      document.getElementById('loading').style.display = 'block';
-    });
-
-    var uploadButton = document.getElementById('uploadButton');
-    var fileInput = document.getElementById('id_file'); // Assuming 'id_file' is the id of your file input field
-    var rowNumberInput = document.getElementById('row_number');
-
-    var outputMessage = document.getElementById('outputMessage');
-
-    function checkInputs() {
-      var file = fileInput.files[0];
-      var rowNumber = rowNumberInput.value;
-      if (file && rowNumber) {
-        uploadButton.disabled = false;
-      } else {
-        uploadButton.disabled = true;
-      }
-    }
-*/
-    
-
-
-
-
-
-/*
-var uploadButton = document.getElementById('uploadButton');
-  var fileInput = document.getElementById('id_file'); // Assuming 'id_file' is the id of your file input field
-  var rowNumberInput = document.getElementById('row_number');
-  var dropZone = document.getElementById('drop_zone');
-  var file;
-
-  // Call checkInputs to set the initial state of the button
-  checkInputs();
-
-  fileInput.addEventListener('change', function() {
-    if (fileInput.files.length > 0) {
-      file = fileInput.files[0];
-    }
-    checkInputs();
-  });
-
-  rowNumberInput.addEventListener('input', checkInputs);
-
-  dropZone.addEventListener('dragover', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    e.dataTransfer.dropEffect = 'copy';
-  });
-
-  dropZone.addEventListener('drop', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.dataTransfer.files.length > 0) {
-      file = e.dataTransfer.files[0];
-      console.log('File dropped: ', file);
-      // Truncate the file name if it's longer than 20 characters
-      var fileName = file.name.length > 20 ? file.name.substring(0, 20) + '...' : file.name;
-      // Update the drop zone with the file name and an icon
-      dropZone.innerHTML = '<i class="fas fa-file"></i> ' + fileName;
-    }
-  });
-
-  function checkInputs() {
-    if (file && rowNumberInput.value) {
-      console.log('Both file and row number are provided.');
-      uploadButton.disabled = false; // Enable the button
-
-    } else {
-      console.log('Either file or row number is missing.');
-      uploadButton.disabled = true; // Disable the button
-
-    }
-  }
-
-  document.getElementById('yourFormId').addEventListener('submit', function(e) {
-    e.preventDefault();
-    checkInputs();
-    document.getElementById('loading').style.display = 'block';
-
-    var formData = new FormData();
-    formData.append('file', file);
-    formData.append('row_number', rowNumberInput.value); // rowNumber is the row number
-
-    console.log("url is:" + window.location.pathname);
-    console.log(window.location);
-
-
-    fetch(window.location.pathname, {
-      method: 'POST',
-      body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-      console.log(data);
-    })
-    
-    .catch(error => {
-      console.error('Error:', error);
-    });
-  });
-*/
-
-
-
-
-
+ 
 
   </script>
 
-  <script>
-    /*
-    //to use later 
-  function getCookie(name) {
-  var cookieValue = null;
-  if (document.cookie && document.cookie !== '') {
-    var cookies = document.cookie.split(';');
-    for (var i = 0; i < cookies.length; i++) {
-      var cookie = cookies[i].trim();
-      // Does this cookie string begin with the name we want?
-      if (cookie.substring(0, name.length + 1) === (name + '=')) {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
-      }
-    }
-  }
-  return cookieValue;
-}
+{% endblock %}
 
-    //Save PDF button function - to complete later*************
-    document.getElementById('savePdfButton').addEventListener('click', function() {
-    console.log('Button clicked');  // Debugging line
-    var aioutput = document.getElementById('aioutput').innerHTML;
-    console.log('aioutput:', aioutput);  // Debugging line
-    // Send aioutput to the server
-    fetch('/save_as_pdf', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        // Include your CSRF token in the headers if you're using Django
-        'X-CSRFToken': getCookie('csrftoken')
-      },
-      body: JSON.stringify({aioutput: aioutput})
-    })
-    .then(response => {
-      console.log('Response received');  // Debugging line
-      return response.blob();
-    })
-    .then(blob => {
-      var url = window.URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = url;
-      a.download = 'aioutput.pdf';
-      document.body.appendChild(a); // we need to append the element to the dom -> otherwise it will not work in firefox
-      a.click();    
-      a.remove();  //afterwards we remove the element again         
-    })
-    .catch(error => console.error('Error:', error));  // Debugging line
-  });
-  */
-
-  </script>
-
-
-</body>
-
-</html>
 
 
 

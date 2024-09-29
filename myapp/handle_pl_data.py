@@ -86,7 +86,7 @@ class HandlePLData:
         '''
             
     #load the data from an excel file 
-    def find_data_start(self, data, row_number):
+    def find_data_start(self, data, row_number=None):
         try:
             headers = self.data_headers_from_ai('resources/find_headers_prompt.txt')
             #row_number = row_number - 2 #self.get_file_header_row(headers)

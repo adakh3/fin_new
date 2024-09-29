@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'myapp',
 ]
 
 MIDDLEWARE = [
@@ -55,7 +56,7 @@ ROOT_URLCONF = 'fin_analysis_django.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'myapp/templates')],
+        'DIRS': [os.path.join(BASE_DIR, 'templates'), os.path.join(BASE_DIR, 'myapp', 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -131,15 +132,16 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 ALLOWED_HOSTS = ['sea-turtle-app-dr5wz.ondigitalocean.app', 'www.relogue.com', 'relogue.com', 'localhost']
 
 LOGIN_URL = '/login/'
-LOGOUT_REDIRECT_URL = '/after-logout/'
+LOGOUT_REDIRECT_URL = 'home'
 LOGIN_REDIRECT_URL = 'home'
 
 
 QB_APP_ENV = 'sandbox'
-QB_REDIRECT_URL = 'http://localhost:8000'
+QB_REDIRECT_URL = 'http://localhost:8000/quickbooks/callback/'
+#QB_REDIRECT_URL = 'http://localhost:8000'
 QB_SCOPE = 'https://sandbox-quickbooks.api.intuit.com'
 
-#this is for the relogue client
+#this is for the relogue client - this will stay the same for production, but perhaps in env variables in the future
 QUICKBOOKS_CLIENT_ID = 'ABeJieEWZIujd5ZU6gigEYcnFSjSgElDrSv8tYoNIeaNB5NsA3'
 QUICKBOOKS_CLIENT_SECRET = 'Ef0QyYIrFNhZtMplSQ6hNEYRS03wRwD9ZMw4DccS'
 
