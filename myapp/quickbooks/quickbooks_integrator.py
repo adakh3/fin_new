@@ -46,42 +46,6 @@ class QuickbooksIntegrator:
             customers =  Customer.all(qb=self.client)
             return customers
 
-    #expects dates in '%Y-%m-%d' format eg '2022-12-31'
-    def getTrialBalance(self, reportName, start_date=None, end_date=None):
-        if not start_date:
-            start_date = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
-        if not end_date:
-            end_date = datetime.now().strftime('%Y-%m-%d')
-
-        try:
-            # Attempt to get the trial balance
-            #trial_balance = self.client.get_report('TrialBalance', params=params)
-                    # Fetch the report
-            params = {
-                'start_date': start_date,
-                'end_date': end_date,
-                'summarize_column_by': 'Month'
-            }
-            
-            print(self.client.get_report(reportName, qs=params))
-
-            report = self.client.get_report(report_type=reportName, qs=params)
-            return report
-        except Exception as e:
-            # If we get an UnauthorizedException, the access token has expired
-            self.refresh_and_store_tokens()
-
-            # Retry the call
-            #trial_balance = self.client.get_report('TrialBalance', params=params)
-            '''
-            trial_balance = self.client.get_report(
-                report_type='TrialBalance',
-                start_date=start_date,
-                end_date=end_date
-            )'''
-            trial_balance = self.client.get_report(report_type=reportName, qs=params)
-
-            return trial_balance
 
     def get_report(self, report_type, start_date=None, end_date=None):
         if not start_date:

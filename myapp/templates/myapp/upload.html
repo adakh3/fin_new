@@ -10,13 +10,9 @@
     <div class="mb-4">
       <button id="fileUploadBtn" class="btn btn-primary">Upload File</button>
 
-
     {% if user.is_authenticated %}
-      {% if user.userprofile.quickbooks_access_token %}
-        <button id="quickbooksBtn" class="btn btn-secondary">Use QuickBooks</button>
-      {% else %}
-        <a href="{% url 'start_quickbooks_auth' %}" class="btn btn-secondary">Connect QuickBooks</a>
-      {% endif %}
+      <button id="quickbooksBtn" class="btn btn-secondary" style="display: none;">Use QuickBooks</button>
+      <a href="{% url 'start_quickbooks_auth' %}" id="quickbooksConnect" class="btn btn-secondary" style="display: none;">Connect QuickBooks</a>
     {% else %}
       <a href="{% url 'login' %}" class="btn btn-secondary">Login for QuickBooks</a>
     {% endif %}
@@ -106,117 +102,143 @@
       </form>
     </div>
 
-    <div id="quickbooksForm" style="display: none;">
-      <form id='qbForm' class="needs-validation" novalidate>
-        {% csrf_token %}
-        <div class="form-group">
-          <label for="qb_report">Report Type:</label>
-          <select id="qb_report" name="qb_report" class="form-control" required>
-            <option value="ProfitAndLoss">Profit and Loss</option>
-            <option value="BalanceSheet">Balance Sheet</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="qb_comparison_type">Comparison Type:</label>
-          <select id="qb_comparison_type" name="qb_comparison_type" class="form-control" required>
-            <option value="none">No Comparison</option>
-            <option value="period">Compare with Another Period</option>
-            <option value="budget">Compare with Budget</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="qb_start_date">Start Date:</label>
-          <input type="date" id="qb_start_date" name="qb_start_date" class="form-control" required>
-        </div>
-        <div class="form-group">
-          <label for="qb_end_date">End Date:</label>
-          <input type="date" id="qb_end_date" name="qb_end_date" class="form-control" required>
-        </div>
-        <div id="comparison_period_fields" style="display: none;">
-          <div class="form-group">
-            <label for="qb_comparison_start_date">Comparison Start Date:</label>
-            <input type="date" id="qb_comparison_start_date" name="qb_comparison_start_date" class="form-control">
-          </div>
-          <div class="form-group">
-            <label for="qb_comparison_end_date">Comparison End Date:</label>
-            <input type="date" id="qb_comparison_end_date" name="qb_comparison_end_date" class="form-control">
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="qb_insights">What would you like to analyse?</label>
-          <select name="insights" id="qb_insights" class="form-control">
-            <option value="All">Overall P&L insights</option>
-            <option value="Income">Revenue insights</option>
-            <option value="Cost of Sales">Costs of sales insights</option>
-            <option value="Expenses">Administrative expense insights</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="qb_industry-dropdown">Pick a relevant industry for more helpful insights</label>
-          <select name="industry" id="qb_industry-dropdown" class="form-control">
-            <option value="all" selected>Other</option>
-            <option value="agriculture">Agriculture</option>
-            <option value="artisanal_foods">Artisanal Foods</option>
-            <option value="arts_crafts">Arts & Crafts</option>
-            <option value="automotive_services">Automotive Services</option>
-            <option value="beauty_care">Beauty Care</option>
-            <option value="cafes">Cafes</option>
-            <option value="catering">Catering</option>
-            <option value="childcare">Childcare</option>
-            <option value="cleaning_services">Cleaning Services</option>
-            <option value="consulting">Consulting</option>
-            <option value="design_services">Design Services</option>
-            <option value="education">Education</option>
-            <option value="entertainment">Entertainment</option>
-            <option value="event_planning">Event Planning</option>
-            <option value="fashion_retail">Fashion Retail</option>
-            <option value="financial_services">Financial Services</option>
-            <option value="fitness_wellness">Fitness & Wellness</option>
-            <option value="florists">Florists</option>
-            <option value="food_trucks">Food Trucks</option>
-            <option value="gardening">Gardening</option>
-            <option value="grocery_stores">Grocery Stores</option>
-            <option value="handyman_services">Handyman Services</option>
-            <option value="healthcare_clinics">Healthcare Clinics</option>
-            <option value="home_decor">Home Decor</option>
-            <option value="hospitality">Hospitality</option>
-            <option value="it_services">IT Services</option>
-            <option value="jewelry">Jewelry</option>
-            <option value="landscaping">Landscaping</option>
-            <option value="laundry_services">Laundry Services</option>
-            <option value="legal_services">Legal Services</option>
-            <option value="manufacturing">Manufacturing</option>
-            <option value="marketing_advertising">Marketing & Advertising</option>
-            <option value="massage_therapy">Massage Therapy</option>
-            <option value="music_entertainment">Music & Entertainment</option>
-            <option value="pet_services">Pet Services</option>
-            <option value="photography">Photography</option>
-            <option value="plumbing">Plumbing</option>
-            <option value="real_estate">Real Estate</option>
-            <option value="restaurants">Restaurants</option>
-            <option value="salons">Salons</option>
-            <option value="software_development">Software Development</option>
-            <option value="sports_recreation">Sports & Recreation</option>
-            <option value="tailoring">Tailoring</option>
-            <option value="tech_repair">Tech Repair</option>
-            <option value="transportation">Transportation</option>
-            <option value="travel_agencies">Travel Agencies</option>
-            <option value="tutoring_services">Tutoring Services</option>
-            <option value="veterinary_services">Veterinary Services</option>
-            <option value="web_design">Web Design</option>
-            <option value="wedding_services">Wedding Services</option>
-            <option value="yoga_studios">Yoga Studios</option>
-          </select>
+    <!-- QuickBooks interface -->
+    {% if user.is_authenticated and user.userprofile.quickbooks_access_token %}
+      <div id="quickbooksInterface" style="display: none;">
+        <div class="mb-3">
+          <button id="qbFormBtn" class="btn btn-outline-primary">Use Form</button>
+          <button id="qbChatBtn" class="btn btn-outline-primary">Use Chat</button>
         </div>
 
-        <div class="form-group">
-          <label for="qb_additional_info">Additional information about this P&L that might give helpful context (highly recommended for better analysis)</label>
-          <textarea id="qb_additional_info" name="additional_info" class="form-control" rows="3" maxlength="250"></textarea>
+        <!-- QuickBooks form (existing) -->
+        <div id="quickbooksForm" style="display: none;">
+          <form id='qbForm' class="needs-validation" novalidate>
+            {% csrf_token %}
+            <div class="form-group">
+              <label for="qb_report">Report Type:</label>
+              <select id="qb_report" name="qb_report" class="form-control" required>
+                <option value="ProfitAndLoss">Profit and Loss</option>
+                <option value="BalanceSheet">Balance Sheet</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="qb_comparison_type">Comparison Type:</label>
+              <select id="qb_comparison_type" name="qb_comparison_type" class="form-control" required>
+                <option value="none">No Comparison</option>
+                <option value="period">Compare with Another Period</option>
+                <option value="budget">Compare with Budget</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="qb_start_date">Start Date:</label>
+              <input type="date" id="qb_start_date" name="qb_start_date" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="qb_end_date">End Date:</label>
+              <input type="date" id="qb_end_date" name="qb_end_date" class="form-control" required>
+            </div>
+            <div id="comparison_period_fields" style="display: none;">
+              <div class="form-group">
+                <label for="qb_comparison_start_date">Comparison Start Date:</label>
+                <input type="date" id="qb_comparison_start_date" name="qb_comparison_start_date" class="form-control">
+              </div>
+              <div class="form-group">
+                <label for="qb_comparison_end_date">Comparison End Date:</label>
+                <input type="date" id="qb_comparison_end_date" name="qb_comparison_end_date" class="form-control">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="qb_insights">What would you like to analyse?</label>
+              <select name="insights" id="qb_insights" class="form-control">
+                <option value="All">Overall P&L insights</option>
+                <option value="Income">Revenue insights</option>
+                <option value="Cost of Sales">Costs of sales insights</option>
+                <option value="Expenses">Administrative expense insights</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="qb_industry-dropdown">Pick a relevant industry for more helpful insights</label>
+              <select name="industry" id="qb_industry-dropdown" class="form-control">
+                <option value="all" selected>Other</option>
+                <option value="agriculture">Agriculture</option>
+                <option value="artisanal_foods">Artisanal Foods</option>
+                <option value="arts_crafts">Arts & Crafts</option>
+                <option value="automotive_services">Automotive Services</option>
+                <option value="beauty_care">Beauty Care</option>
+                <option value="cafes">Cafes</option>
+                <option value="catering">Catering</option>
+                <option value="childcare">Childcare</option>
+                <option value="cleaning_services">Cleaning Services</option>
+                <option value="consulting">Consulting</option>
+                <option value="design_services">Design Services</option>
+                <option value="education">Education</option>
+                <option value="entertainment">Entertainment</option>
+                <option value="event_planning">Event Planning</option>
+                <option value="fashion_retail">Fashion Retail</option>
+                <option value="financial_services">Financial Services</option>
+                <option value="fitness_wellness">Fitness & Wellness</option>
+                <option value="florists">Florists</option>
+                <option value="food_trucks">Food Trucks</option>
+                <option value="gardening">Gardening</option>
+                <option value="grocery_stores">Grocery Stores</option>
+                <option value="handyman_services">Handyman Services</option>
+                <option value="healthcare_clinics">Healthcare Clinics</option>
+                <option value="home_decor">Home Decor</option>
+                <option value="hospitality">Hospitality</option>
+                <option value="it_services">IT Services</option>
+                <option value="jewelry">Jewelry</option>
+                <option value="landscaping">Landscaping</option>
+                <option value="laundry_services">Laundry Services</option>
+                <option value="legal_services">Legal Services</option>
+                <option value="manufacturing">Manufacturing</option>
+                <option value="marketing_advertising">Marketing & Advertising</option>
+                <option value="massage_therapy">Massage Therapy</option>
+                <option value="music_entertainment">Music & Entertainment</option>
+                <option value="pet_services">Pet Services</option>
+                <option value="photography">Photography</option>
+                <option value="plumbing">Plumbing</option>
+                <option value="real_estate">Real Estate</option>
+                <option value="restaurants">Restaurants</option>
+                <option value="salons">Salons</option>
+                <option value="software_development">Software Development</option>
+                <option value="sports_recreation">Sports & Recreation</option>
+                <option value="tailoring">Tailoring</option>
+                <option value="tech_repair">Tech Repair</option>
+                <option value="transportation">Transportation</option>
+                <option value="travel_agencies">Travel Agencies</option>
+                <option value="tutoring_services">Tutoring Services</option>
+                <option value="veterinary_services">Veterinary Services</option>
+                <option value="web_design">Web Design</option>
+                <option value="wedding_services">Wedding Services</option>
+                <option value="yoga_studios">Yoga Studios</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="qb_additional_info">Additional information about this P&L that might give helpful context (highly recommended for better analysis)</label>
+              <textarea id="qb_additional_info" name="additional_info" class="form-control" rows="3" maxlength="250"></textarea>
+            </div>
+
+            <button type="submit" id="qbButton" class="btn btn-primary">Analyze QuickBooks Data</button>
+          </form>
         </div>
 
-        <button type="submit" id="qbButton" class="btn btn-primary">Analyze QuickBooks Data</button>
-      </form>
-    </div>
+        <!-- QuickBooks chat interface (new) -->
+        <div id="quickbooksChat" style="display: none;">
+          <div id="chatMessages" class="border p-3 mb-3" style="height: 300px; overflow-y: auto;">
+            <!-- Chat messages will be appended here -->
+          </div>
+          <form id="chatForm">
+            <div class="input-group">
+              <input type="text" id="chatInput" class="form-control" placeholder="Type your message...">
+              <div class="input-group-append">
+                <button class="btn btn-primary" type="submit">Send</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    {% endif %}
 
     {% if error %}
     <p class="error">{{ error }}</p>
@@ -238,136 +260,238 @@
     <!--<button id="savePdfButton" class="btn btn-secondary">Save as PDF</button>-->
   </div>
 
-
   <script>
-
-  document.getElementById('fileUploadBtn').addEventListener('click', function() {
-    document.getElementById('fileUploadForm').style.display = 'block';
-    document.getElementById('quickbooksForm').style.display = 'none';
-  });
-
-  document.getElementById('quickbooksBtn').addEventListener('click', function() {
-    document.getElementById('quickbooksForm').style.display = 'block';
-    document.getElementById('fileUploadForm').style.display = 'none';
-  });
-
-  var uploadButton = document.getElementById('uploadButton');
-  var qbButton = document.getElementById('qbButton');
-  var fileInput = document.getElementById('id_file'); // Assuming 'id_file' is the id of your file input field
-  var file;
-
-  document.getElementById('qb_comparison_type').addEventListener('change', function() {
-    var comparisonFields = document.getElementById('comparison_period_fields');
-    if (this.value === 'period') {
-      comparisonFields.style.display = 'block';
-    } else {
-      comparisonFields.style.display = 'none';
-    }
-  });
-
-  document.getElementById('qbForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    console.log('QB form submitted');
-      
-    // Show loading message
-    document.getElementById('loading').style.display = 'block';
+    document.addEventListener('DOMContentLoaded', function() {
+      // Function to set up event listeners
+      function setupEventListeners() {
+        const fileUploadBtn = document.getElementById('fileUploadBtn');
+        const quickbooksBtn = document.getElementById('quickbooksBtn');
+        const qbFormBtn = document.getElementById('qbFormBtn');
+        const qbChatBtn = document.getElementById('qbChatBtn');
+        const chatForm = document.getElementById('chatForm');
+        const qbForm = document.getElementById('qbForm');
+        const qbComparisonType = document.getElementById('qb_comparison_type');
     
-    const formData = {
-        report_type: document.getElementById('qb_report').value,
-        comparison_type: document.getElementById('qb_comparison_type').value,
-        start_date: document.getElementById('qb_start_date').value,
-        end_date: document.getElementById('qb_end_date').value,
-        insights: document.getElementById('qb_insights').value,
-        industry: document.getElementById('qb_industry-dropdown').value,
-        additional_info: document.getElementById('qb_additional_info').value
-    };
+        if (fileUploadBtn) {
+          fileUploadBtn.addEventListener('click', function() {
+            document.getElementById('fileUploadForm').style.display = 'block';
+            document.getElementById('quickbooksInterface').style.display = 'none';
+          });
+        }
     
-    if (formData.comparison_type === 'period') {
-        formData.comparison_start_date = document.getElementById('qb_comparison_start_date').value;
-        formData.comparison_end_date = document.getElementById('qb_comparison_end_date').value;
-    }
+        if (quickbooksBtn) {
+          quickbooksBtn.addEventListener('click', function() {
+            document.getElementById('quickbooksInterface').style.display = 'block';
+            document.getElementById('fileUploadForm').style.display = 'none';
+          });
+        }
     
-    console.log('Form data:', formData);
+        if (qbFormBtn) {
+          qbFormBtn.addEventListener('click', function() {
+            document.getElementById('quickbooksForm').style.display = 'block';
+            document.getElementById('quickbooksChat').style.display = 'none';
+          });
+        }
     
-    fetch('/quickbooks_report_analysis/', {
-        method: 'POST',
-        headers: {
+        if (qbChatBtn) {
+          qbChatBtn.addEventListener('click', function() {
+            document.getElementById('quickbooksChat').style.display = 'block';
+            document.getElementById('quickbooksForm').style.display = 'none';
+          });
+        }
+    
+        if (chatForm) {
+          chatForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const message = document.getElementById('chatInput').value;
+            if (message.trim() !== '') {
+              appendMessage('You', message);
+              document.getElementById('chatInput').value = '';
+              sendMessageToServer(message);
+            }
+          });
+        }
+    
+        if (qbComparisonType) {
+          qbComparisonType.addEventListener('change', function() {
+            var comparisonFields = document.getElementById('comparison_period_fields');
+            if (this.value === 'period') {
+              comparisonFields.style.display = 'block';
+            } else {
+              comparisonFields.style.display = 'none';
+            }
+          });
+        }
+    
+        if (qbForm) {
+          qbForm.addEventListener('submit', handleQbFormSubmit);
+        }
+      }
+    
+      // Function to handle QuickBooks form submission
+      function handleQbFormSubmit(e) {
+        e.preventDefault();
+        console.log('QB form submitted');
+        
+        document.getElementById('loading').style.display = 'block';
+        
+        const formData = {
+          report_type: document.getElementById('qb_report').value,
+          comparison_type: document.getElementById('qb_comparison_type').value,
+          start_date: document.getElementById('qb_start_date').value,
+          end_date: document.getElementById('qb_end_date').value,
+          insights: document.getElementById('qb_insights').value,
+          industry: document.getElementById('qb_industry-dropdown').value,
+          additional_info: document.getElementById('qb_additional_info').value
+        };
+        
+        if (formData.comparison_type === 'period') {
+          formData.comparison_start_date = document.getElementById('qb_comparison_start_date').value;
+          formData.comparison_end_date = document.getElementById('qb_comparison_end_date').value;
+        }
+        
+        console.log('Form data:', formData);
+        
+        fetch('/quickbooks_report_analysis/', {
+          method: 'POST',
+          headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify(formData)
-    })
-    .then(response => {
-        console.log('Response status:', response.status);
-        return response.json();
-    })
-    .then(data => {
+          },
+          body: JSON.stringify(formData)
+        })
+        .then(response => {
+          console.log('Response status:', response.status);
+          return response.json();
+        })
+        .then(handleQbFormResponse)
+        .catch(handleQbFormError);
+      }
+    
+      // Function to handle QuickBooks form response
+      function handleQbFormResponse(data) {
         console.log('Received data:', data);
-        // Hide loading message
         document.getElementById('loading').style.display = 'none';
         
         if (data.error) {
-            alert('Error: ' + data.error);
+          alert('Error: ' + data.error);
         } else {
-            const outputDiv = document.getElementById('aioutput');
-            outputDiv.innerHTML = ''; // Clear previous content
-
-            // Display results
-            if (data.results) {
-                const resultsDiv = document.createElement('div');
-                resultsDiv.innerHTML = data.results;
-                outputDiv.appendChild(resultsDiv);
-            }
-
-            // Display charts
-            if (data.charts && data.charts.length > 0) {
-                console.log('Displaying charts');
-                const chartsDiv = document.createElement('div');
-                chartsDiv.id = 'charts-container';
-                data.charts.forEach(chartHtml => {
-                    const chartDiv = document.createElement('div');
-                    chartDiv.innerHTML = chartHtml;
-                    chartsDiv.appendChild(chartDiv);
-                });
-                outputDiv.appendChild(chartsDiv);
-
-                // Ensure any scripts in the inserted content are executed
-                outputDiv.querySelectorAll('script').forEach(script => {
-                    const newScript = document.createElement('script');
-                    newScript.text = script.innerHTML;
-                    script.parentNode.replaceChild(newScript, script);
-                });
-            }
+          const outputDiv = document.getElementById('aioutput');
+          outputDiv.innerHTML = '';
+    
+          if (data.results) {
+            const resultsDiv = document.createElement('div');
+            resultsDiv.innerHTML = data.results;
+            outputDiv.appendChild(resultsDiv);
+          }
+    
+          if (data.charts && data.charts.length > 0) {
+            console.log('Displaying charts');
+            const chartsDiv = document.createElement('div');
+            chartsDiv.id = 'charts-container';
+            data.charts.forEach(chartHtml => {
+              const chartDiv = document.createElement('div');
+              chartDiv.innerHTML = chartHtml;
+              chartsDiv.appendChild(chartDiv);
+            });
+            outputDiv.appendChild(chartsDiv);
+    
+            outputDiv.querySelectorAll('script').forEach(script => {
+              const newScript = document.createElement('script');
+              newScript.text = script.innerHTML;
+              script.parentNode.replaceChild(newScript, script);
+            });
+          }
         }
-    })
-    .catch(error => {
+      }
+    
+      // Function to handle QuickBooks form error
+      function handleQbFormError(error) {
         console.error('Error:', error);
         document.getElementById('loading').style.display = 'none';
         alert('An error occurred. Please try again.');
-    });
-  });
-
-  // Add this function to get the CSRF token
-  function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-      const cookies = document.cookie.split(';');
-      for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i].trim();
-        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
+      }
+    
+      // Function to append message in chat
+      function appendMessage(sender, message) {
+        const chatMessages = document.getElementById('chatMessages');
+        const messageElement = document.createElement('div');
+        messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
+        chatMessages.appendChild(messageElement);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+    
+      // Function to send message to server
+      function sendMessageToServer(message) {
+        fetch('/quickbooks_chat/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify({ message: message })
+        })
+        .then(response => response.json())
+        .then(data => {
+          appendMessage('AI', data.response);
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          appendMessage('System', 'An error occurred. Please try again.');
+        });
+      }
+    
+      // Function to get CSRF token
+      function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
+            }
+          }
+        }
+        return cookieValue;
+      }
+    
+      // Function to check QuickBooks authentication
+      function checkQuickBooksAuth() {
+        const quickbooksBtn = document.getElementById('quickbooksBtn');
+        const quickbooksConnect = document.getElementById('quickbooksConnect');
+        
+        if (quickbooksBtn && quickbooksConnect) {
+          fetch('/check_quickbooks_auth/', {
+            method: 'GET',
+            headers: {
+              'X-CSRFToken': getCookie('csrftoken')
+            },
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.is_valid) {
+              quickbooksBtn.style.display = 'inline-block';
+              quickbooksConnect.style.display = 'none';
+            } else {
+              quickbooksBtn.style.display = 'none';
+              quickbooksConnect.style.display = 'inline-block';
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            quickbooksBtn.style.display = 'none';
+            quickbooksConnect.style.display = 'inline-block';
+          });
         }
       }
-    }
-    return cookieValue;
-  }
-
-
- 
-
-  </script>
-
+    
+      // Set up event listeners and check QuickBooks auth when the page loads
+      setupEventListeners();
+      checkQuickBooksAuth();
+    });
+    </script>
 {% endblock %}
 
 

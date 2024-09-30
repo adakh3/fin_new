@@ -1,6 +1,8 @@
 # views.py
 import profile
 from django.shortcuts import render
+
+from myapp.openai_function_caller import OpenAIFunctionCaller
 from .forms import UploadFileForm
 import os
 from .handle_pl_data import HandlePLData
@@ -121,41 +123,31 @@ def handle_file(f, request):
     return results, my_object.charts
 
 
+@login_required
 def start_quickbooks_auth(request):
-    try:
-        qb_auth = QuickbooksAuth()
-        auth_url = qb_auth.get_auth_url()
-        return redirect(auth_url)
-    except Exception as e:
-        messages.error(request, f'Error starting QuickBooks authentication: {str(e)}')
-        return redirect('home')
+    qb_auth = QuickbooksAuth(request.user)
+    auth_url = qb_auth.get_authorization_url()
+    return redirect(auth_url)
 
 
-
+@login_required
 def quickbooks_callback(request):
     auth_code = request.GET.get('code')
     realm_id = request.GET.get('realmId')
+    
     if auth_code and realm_id:
-        qb_auth = QuickbooksAuth()
-        try:
-            logger.info(f"Exchanging code for token. Auth code: {auth_code}, Realm ID: {realm_id}")
-            access_token, refresh_token = qb_auth.exchange_code_for_token(auth_code, realm_id)
-            logger.info(f"Received tokens. Access token: {access_token}, Refresh token: {refresh_token}")
-            profile, created = UserProfile.objects.get_or_create(user=request.user)
-            profile.quickbooks_access_token = access_token
-            profile.quickbooks_refresh_token = refresh_token
-            profile.quickbooks_realm_id = realm_id
-            profile.save()
-            messages.success(request, 'Successfully connected to QuickBooks!')
-            return redirect('home')
-        except Exception as e:
-            logger.error(f"Error in QuickBooks callback: {str(e)}", exc_info=True)
-            messages.error(request, f'Error connecting to QuickBooks: {str(e)}')
-            return redirect('home')
+        qb_auth = QuickbooksAuth(request.user)
+        qb_auth.realm_id = realm_id
+        qb_auth.get_bearer_token(auth_code)
+        # Save the tokens after obtaining them
+        qb_auth.save_tokens()
+
+
+        return redirect('home')  # or wherever you want to redirect after successful auth
     else:
-        logger.warning("Missing auth code or realm ID in QuickBooks callback")
-        messages.error(request, 'Error connecting to QuickBooks: Missing authorization code or realm ID')
-        return redirect('home')
+        # Handle error
+        return redirect('error_page')
+
 
 # Update the existing quickbooks_report_analysis view
 @csrf_exempt
@@ -163,22 +155,16 @@ def quickbooks_callback(request):
 @login_required
 def quickbooks_report_analysis(request):
     data = json.loads(request.body)
-    qb_auth = QuickbooksAuth()
-    
-    # Set the tokens from the user's stored credentials
-    qb_auth.set_tokens(
-        request.user.quickbooks_access_token,
-        request.user.quickbooks_refresh_token,
-        request.user.quickbooks_realm_id
-    )
+    qb_auth = QuickbooksAuth(user=request.user)
     
     try:
-        # Check if the token is valid, refresh if necessary
-        if not qb_auth.has_valid_token():
-            new_access_token, new_refresh_token = qb_auth.refresh_tokens()
-            request.user.quickbooks_access_token = new_access_token
-            request.user.quickbooks_refresh_token = new_refresh_token
-            request.user.save()
+        if not qb_auth.is_access_token_valid():
+            if not qb_auth.refresh_tokens():
+                # Token refresh failed, user needs to re-authenticate
+                return JsonResponse({
+                    'error': 'QuickBooks authentication has expired',
+                    'needs_reauth': True
+                }, status=401)
 
         qb_integrator = QuickbooksIntegrator(qb_auth)
         
@@ -228,6 +214,7 @@ def quickbooks_report_analysis(request):
         }, safe=False)
         
     except Exception as e:
+        logger.error(f"Error in quickbooks_report_analysis: {str(e)}")
         return JsonResponse({'error': str(e)}, status=400)
     
 
@@ -236,4 +223,29 @@ def quickbooks_report_analysis(request):
 def after_logout(request):
     return redirect('home')
 
-# Keep the existing start_quickbooks_operations function unchanged
+# Create a dictionary to store OpenAIFunctionCaller instances for each user
+function_callers = {}
+
+@csrf_exempt
+@require_POST
+@login_required
+def quickbooks_chat(request):
+    data = json.loads(request.body)
+    user_message = data.get('message', '')
+    
+    # Get or create an OpenAIFunctionCaller instance for this user
+    if request.user.id not in function_callers:
+        function_callers[request.user.id] = OpenAIFunctionCaller(request.user, "gpt-4o-mini")
+    
+    function_caller = function_callers[request.user.id]
+    ai_response = function_caller.process_message(user_message)
+    
+    return JsonResponse({'response': ai_response})# Keep the existing start_quickbooks_operations function unchanged
+
+@login_required
+def check_quickbooks_auth(request):
+    qb_auth = QuickbooksAuth(request.user)
+    is_valid = qb_auth.is_access_token_valid()
+    if not is_valid:
+        is_valid = qb_auth.refresh_tokens()
+    return JsonResponse({'is_valid': is_valid})

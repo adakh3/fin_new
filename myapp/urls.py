@@ -10,5 +10,5 @@ urlpatterns = [
     path('quickbooks_report_analysis/', views.quickbooks_report_analysis, name='quickbooks_report_analysis'),
     path('quickbooks/callback/', views.quickbooks_callback, name='quickbooks_callback'),
     path('start_quickbooks_auth/', views.start_quickbooks_auth, name='start_quickbooks_auth'),
-
+    path('quickbooks_chat/', views.quickbooks_chat, name='quickbooks_chat'),
 ]
