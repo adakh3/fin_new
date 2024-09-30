@@ -9,25 +9,35 @@ import pdb
 import pandas as pd
 from .quickbooks_auth import QuickbooksAuth
 #from quickbooks.objects import Report
+from quickbooks import QuickBooks
+from quickbooks.objects import Customer
+from intuitlib.exceptions import AuthClientError
 
 class QuickbooksIntegrator:
 
     #def __init__(self, refresh_token, realm_id):
     def __init__(self, qbAuth: QuickbooksAuth):
+        """
+        Initializes the QuickbooksIntegrator with the provided QuickbooksAuth instance.
 
+        Args:
+            qbAuth (QuickbooksAuth): An instance of QuickbooksAuth for authentication.
+        """
         #at the moment connects to my company sandbox, and later will connect to the prod company of my users through oAuth2
         self.qb_auth = qbAuth
         self.client = QuickBooks(
             auth_client=qbAuth.auth_client,
-            refresh_token=qbAuth.refresh_token,
+            refresh_token=qbAuth.auth_client.refresh_token,
             company_id=qbAuth.realm_id,
             minorversion=62 
         )
 
-
     def refresh_tokens(self):
+        """
+        Refreshes the authentication tokens for the QuickBooks client.
+        """
         try:
-            self.qb_auth.auth_client.refresh()
+            self.qb_auth.refresh_tokens()
             self.client.auth_client = self.qb_auth.auth_client
             self.client.refresh_token = self.qb_auth.auth_client.refresh_token
         except AuthClientError as e:
@@ -35,19 +45,35 @@ class QuickbooksIntegrator:
             raise
 
     def getCustomers(self):
+        """
+        Retrieves a list of customers from QuickBooks.
+
+        Returns:
+            list: A list of Customer objects.
+        """
         try:
             customers =  Customer.all(qb=self.client)
             return customers
         except Exception as e:
             # If we get an UnauthorizedException, the access token has expired
-            self.refresh_and_store_tokens(self.client)
+            self.refresh_tokens()
 
             #retry the call 
             customers =  Customer.all(qb=self.client)
             return customers
 
-
     def get_report(self, report_type, start_date=None, end_date=None):
+        """
+        Retrieves a report from QuickBooks for the specified report type and date range.
+
+        Args:
+            report_type (str): The type of report to retrieve.
+            start_date (str, optional): The start date for the report in 'YYYY-MM-DD' format. Defaults to one year ago.
+            end_date (str, optional): The end date for the report in 'YYYY-MM-DD' format. Defaults to today.
+
+        Returns:
+            DataFrame: A pandas DataFrame containing the report data.
+        """
         if not start_date:
             start_date = (datetime.now() - timedelta(days=365)).strftime('%Y-%m-%d')
         if not end_date:
@@ -83,6 +109,14 @@ class QuickbooksIntegrator:
             return pd.DataFrame()
 
     def process_rows(self, rows, data, parent=''):
+        """
+        Processes the rows of a report and appends the data to the provided list.
+
+        Args:
+            rows (list): The rows of the report to process.
+            data (list): The list to append processed data to.
+            parent (str, optional): The parent account name for nested rows. Defaults to an empty string.
+        """
         for row in rows:
             if row['type'] == 'Data':
                 account = parent + row['ColData'][0]['value']
@@ -97,6 +131,19 @@ class QuickbooksIntegrator:
                 data.append([account] + amounts)
 
     def get_report_with_comparison(self, report_type, start_date, end_date, comparison_start_date, comparison_end_date):
+        """
+        Retrieves a report and compares it with another report for a specified date range.
+
+        Args:
+            report_type (str): The type of report to retrieve.
+            start_date (str): The start date for the current report.
+            end_date (str): The end date for the current report.
+            comparison_start_date (str): The start date for the comparison report.
+            comparison_end_date (str): The end date for the comparison report.
+
+        Returns:
+            dict: A dictionary containing the current report, comparison report, and differences.
+        """
         # Implementation for comparison with another period
         report = self.client.get_report(report_type, start_date, end_date)
         comparison_report = self.client.get_report(report_type, comparison_start_date, comparison_end_date)
@@ -112,6 +159,17 @@ class QuickbooksIntegrator:
         return combined_report
 
     def get_report_with_budget(self, report_type, start_date, end_date):
+        """
+        Retrieves a report and compares it with the budget for a specified date range.
+
+        Args:
+            report_type (str): The type of report to retrieve.
+            start_date (str): The start date for the report.
+            end_date (str): The end date for the report.
+
+        Returns:
+            dict: A dictionary containing the actual report, budget report, and variances.
+        """
         # Implementation for comparison with budget
         report = self.client.get_report(report_type, start_date, end_date)
         budget_report = self.client.get_report('Budget', start_date, end_date)
@@ -127,11 +185,31 @@ class QuickbooksIntegrator:
         return combined_report
 
     def _calculate_differences(self, current_report, comparison_report):
+        """
+        Calculates the differences between the current report and the comparison report.
+
+        Args:
+            current_report (dict): The current report data.
+            comparison_report (dict): The comparison report data.
+
+        Returns:
+            dict: A dictionary containing the differences between the two reports.
+        """
         # Implement logic to calculate differences between two periods
         # This is a placeholder and should be replaced with actual implementation
         return {}
 
     def _calculate_budget_variances(self, actual_report, budget_report):
+        """
+        Calculates the variances between the actual report and the budget report.
+
+        Args:
+            actual_report (dict): The actual report data.
+            budget_report (dict): The budget report data.
+
+        Returns:
+            dict: A dictionary containing the variances between the actual and budget reports.
+        """
         # Implement logic to calculate variances between actual and budget
         # This is a placeholder and should be replaced with actual implementation
         return {}

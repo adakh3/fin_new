@@ -1,5 +1,6 @@
 from venv import logger
 from intuitlib.client import AuthClient
+from intuitlib.enums import Scopes
 from intuitlib.exceptions import AuthClientError
 from django.utils import timezone
 from django.conf import settings
@@ -7,6 +8,9 @@ import datetime
 import logging
 
 class QuickbooksAuth:
+
+
+    scopes = [Scopes.ACCOUNTING]  # This uses the enum, which is what intuitlib expects]
     def __init__(self, user):
         self.user = user
         self.auth_client = AuthClient(
@@ -57,7 +61,7 @@ class QuickbooksAuth:
         self.save_tokens()
 
     def get_authorization_url(self):
-        return self.auth_client.get_authorization_url([settings.QUICKBOOKS_SCOPE])
+        return self.auth_client.get_authorization_url(self.scopes)
 
     def get_bearer_token(self, auth_code):
         self.auth_client.get_bearer_token(auth_code, realm_id=self.realm_id)

@@ -140,7 +140,7 @@ LOGIN_REDIRECT_URL = 'home'
 QB_APP_ENV = 'sandbox'
 QB_REDIRECT_URL = 'http://localhost:8000/quickbooks/callback/'
 #QB_REDIRECT_URL = 'http://localhost:8000'
-QUICKBOOKS_SCOPE = 'com.intuit.quickbooks.accounting'
+#QUICKBOOKS_SCOPE = 'com.intuit.quickbooks.accounting'
 
 #this is for the relogue client - this will stay the same for production, but perhaps in env variables in the future
 QUICKBOOKS_CLIENT_ID = 'ABeJieEWZIujd5ZU6gigEYcnFSjSgElDrSv8tYoNIeaNB5NsA3'
