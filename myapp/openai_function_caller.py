@@ -102,7 +102,17 @@ class OpenAIFunctionCaller:
         if response_message.tool_calls:
             function_response = self.handle_tool_calls(response_message.tool_calls)
             self.conversation_history.append({"role": "assistant", "content": function_response})
-            return function_response
+
+            # Send the function response to OpenAI for summarization
+            summary_response = client.chat.completions.create(
+                model=self.aiModel,
+                messages=[
+                    {"role": "user", "content": f"Very briefly summarize the 5 most imporant points for the following financial report, mention the report name and dates as well: {function_response}"}
+                ]
+            )
+            summary_message = summary_response.choices[0].message.content
+            self.conversation_history.append({"role": "assistant", "content": summary_message})
+            return summary_message
 
         if response_message.content:
             self.conversation_history.append({"role": "assistant", "content": response_message.content})
@@ -118,11 +128,7 @@ class OpenAIFunctionCaller:
             
             if hasattr(self.qb_integrator, function_name):
                 try:
-                    if not self.qb_auth.is_access_token_valid():
-                        if not self.qb_auth.refresh_tokens():
-                            raise Exception("Failed to refresh QuickBooks tokens")
-                        self.qb_integrator.client = self.qb_integrator.get_client()
-
+                    self.qb_auth.ensure_valid_token()
                     method = getattr(self.qb_integrator, function_name)
                     result = method(**function_args)
                     results.append(f"Result of {function_name}: {result}")

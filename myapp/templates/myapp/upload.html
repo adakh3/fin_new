@@ -433,7 +433,11 @@
         })
         .then(response => response.json())
         .then(data => {
-          appendMessage('AI', data.response);
+          const chatMessages = document.getElementById('chatMessages');
+          const messageElement = document.createElement('div');
+          messageElement.innerHTML = `<strong>AI:</strong> <div class="ai-response">${data.response}</div>`;
+          chatMessages.appendChild(messageElement);
+          chatMessages.scrollTop = chatMessages.scrollHeight;
         })
         .catch(error => {
           console.error('Error:', error);

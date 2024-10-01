@@ -29,6 +29,8 @@ from django.utils.html import strip_tags
 from .models import UserProfile
 from django.contrib.auth.models import User
 import logging
+import markdown
+import re
 
 
 logger = logging.getLogger(__name__)
@@ -239,14 +241,23 @@ def quickbooks_chat(request):
     
     function_caller = function_callers[request.user.id]
     ai_response = function_caller.process_message(user_message)
+
+    # Convert markdown to HTML
+    html_response = markdown.markdown(ai_response)
+
+    # Post-process HTML to further reduce spacing
+    html_response = re.sub(r'<\/p>\s*<p>', '</p><p>', html_response)
+    html_response = re.sub(r'<\/li>\s*<li>', '</li><li>', html_response)
+    html_response = re.sub(r'<p>\s*<\/p>', '', html_response)  # Remove empty paragraphs
+
+
+    safe_html_response = mark_safe(html_response)
+
     
-    
-    return JsonResponse({'response': ai_response})# Keep the existing start_quickbooks_operations function unchanged
+    return JsonResponse({'response': safe_html_response})# Keep the existing start_quickbooks_operations function unchanged
 
 @login_required
 def check_quickbooks_auth(request):
     qb_auth = QuickbooksAuth(request.user)
-    is_valid = qb_auth.is_access_token_valid()
-    if not is_valid:
-        is_valid = qb_auth.refresh_tokens()
+    is_valid = qb_auth.ensure_valid_token()
     return JsonResponse({'is_valid': is_valid})

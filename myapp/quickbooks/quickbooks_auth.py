@@ -67,3 +67,8 @@ class QuickbooksAuth:
         self.auth_client.get_bearer_token(auth_code, realm_id=self.realm_id)
         self.token_expiry = timezone.now() + datetime.timedelta(hours=1)
         self.save_tokens()
+
+    def ensure_valid_token(self):
+        if not self.is_access_token_valid():
+            return self.refresh_tokens()
+        return True

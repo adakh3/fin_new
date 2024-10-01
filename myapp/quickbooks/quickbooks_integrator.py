@@ -32,6 +32,7 @@ class QuickbooksIntegrator:
             minorversion=62 
         )
 
+    '''
     def refresh_tokens(self):
         """
         Refreshes the authentication tokens for the QuickBooks client.
@@ -43,12 +44,7 @@ class QuickbooksIntegrator:
         except AuthClientError as e:
             print(f"Error refreshing token: {str(e)}")
             raise
-
-    def ensure_valid_token(self):
-        if not self.qb_auth.is_access_token_valid():
-            if not self.qb_auth.refresh_tokens():
-                raise Exception("Failed to refresh QuickBooks tokens")
-            self.client = self.get_client()  # Re-initialize client with new tokens
+    '''
 
     def getCustomers(self):
         """
