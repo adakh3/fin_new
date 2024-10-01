@@ -240,6 +240,7 @@ def quickbooks_chat(request):
     function_caller = function_callers[request.user.id]
     ai_response = function_caller.process_message(user_message)
     
+    
     return JsonResponse({'response': ai_response})# Keep the existing start_quickbooks_operations function unchanged
 
 @login_required

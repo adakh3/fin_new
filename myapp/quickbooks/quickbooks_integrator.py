@@ -44,6 +44,12 @@ class QuickbooksIntegrator:
             print(f"Error refreshing token: {str(e)}")
             raise
 
+    def ensure_valid_token(self):
+        if not self.qb_auth.is_access_token_valid():
+            if not self.qb_auth.refresh_tokens():
+                raise Exception("Failed to refresh QuickBooks tokens")
+            self.client = self.get_client()  # Re-initialize client with new tokens
+
     def getCustomers(self):
         """
         Retrieves a list of customers from QuickBooks.

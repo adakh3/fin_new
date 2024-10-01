@@ -86,46 +86,41 @@ class OpenAIFunctionCaller:
         return tools
 
     def process_message(self, new_message):
-        # Check if the new message is empty. If so, return a message asking for more details.
         if not new_message:
             return "I'm sorry, I couldn't determine the appropriate action. Could you please provide more details or clarify your request?"
-        else:
-            # Add the new user message to the conversation history
-            self.conversation_history.append({"role": "user", "content": new_message})
-        # Retrieve the list of available integrator functions
-        tools = self.get_integrator_functions()
-        # Add the new user message to the conversation history (this line is redundant and can be removed)
+
         self.conversation_history.append({"role": "user", "content": new_message})
-        # Use the OpenAI client to generate a response based on the conversation history and available tools
+
         response = client.chat.completions.create(
             model=self.aiModel,
             messages=self.conversation_history,
-            tools=tools,
+            tools=self.get_integrator_functions(),
             tool_choice="auto"
         )
-
-        # Extract the response message from the OpenAI response
         response_message = response.choices[0].message
 
-        # Add the AI's response to the conversation history
-        self.conversation_history.append({"role": "assistant", "content": response_message.content})
-
-        # Check if the AI's response includes any tool calls
         if response_message.tool_calls:
-            results = []
-            # Iterate through each tool call in the response
-            for tool_call in response_message.tool_calls:
-                # Extract the function name and arguments from the tool call
-                function_name = tool_call.function.name
-                function_args = json.loads(tool_call.function.arguments)
-                
+            function_response = self.handle_tool_calls(response_message.tool_calls)
+            self.conversation_history.append({"role": "assistant", "content": function_response})
+            return function_response
+
+        if response_message.content:
+            self.conversation_history.append({"role": "assistant", "content": response_message.content})
+            return response_message.content
+
+        return "I'm sorry, I couldn't determine the appropriate action. Could you please provide more details or clarify your request?"
+
+    def handle_tool_calls(self, tool_calls):
+        results = []
+        for tool_call in tool_calls:
+            function_name = tool_call.function.name
+            function_args = json.loads(tool_call.function.arguments)
+            
             if hasattr(self.qb_integrator, function_name):
                 try:
-                    # Check and refresh token if necessary before making the API call
                     if not self.qb_auth.is_access_token_valid():
                         if not self.qb_auth.refresh_tokens():
                             raise Exception("Failed to refresh QuickBooks tokens")
-                        # Re-initialize the QuickBooks client with the new token
                         self.qb_integrator.client = self.qb_integrator.get_client()
 
                     method = getattr(self.qb_integrator, function_name)
@@ -135,16 +130,5 @@ class OpenAIFunctionCaller:
                     results.append(f"An error occurred while calling {function_name}: {str(e)}")
             else:
                 results.append(f"Function {function_name} not found in QuickbooksIntegrator")
-
-            
-            # If there are any results from the function calls, add them to the conversation history and return them
-            if results:
-                function_response = "\n".join(results)
-                self.conversation_history.append({"role": "function", "content": function_response})
-                return function_response
         
-        # If no function was called or if we don't have results, return the AI's response
-        if response_message.content:
-            return response_message.content
-        else:
-            return "I'm sorry, I couldn't determine the appropriate action. Could you please provide more details or clarify your request?"
+        return "\n".join(results)
