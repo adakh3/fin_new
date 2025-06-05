@@ -1,1 +1,1 @@
-web: gunicorn fin_analysis_django.wsgi:application --bind 0.0.0.0:$PORT
+web: gunicorn --worker-tmp-dir /dev/shm fin_analysis_django.wsgi --timeout 120
