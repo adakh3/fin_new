@@ -31,6 +31,9 @@ services:
   - key: QB_APP_ENV
     scope: RUN_AND_BUILD_TIME
     value: "sandbox"
+  - key: DATABASE_URL
+    scope: RUN_AND_BUILD_TIME
+    value: "${db.DATABASE_URL}"
   github:
     branch: master
     deploy_on_push: true
@@ -39,7 +42,7 @@ services:
   instance_count: 1
   instance_size_slug: basic-xxs
   name: web
-  run_command: gunicorn --worker-tmp-dir /dev/shm fin_analysis_django.wsgi
+  run_command: gunicorn --bind :8000 --workers 2 fin_analysis_django.wsgi:application
   source_dir: /
 databases:
 - engine: PG
