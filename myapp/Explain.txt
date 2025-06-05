@@ -1,0 +1,27 @@
+Key User Pathways
+
+File Upload Path
+upload.html: Main interface
+views.py: handle_file() processes uploaded file
+handle_pl_data.py: HandlePLData class analyzes data
+Results displayed back in upload.html
+
+QuickBooks Integration Path
+upload.html: QuickBooks connect/auth buttons
+views.py: quickbooks_callback() handles OAuth
+quickbooks_auth.py: Manages QB authentication
+quickbooks_integrator.py: Fetches QB data
+
+Chat Interface Path
+upload.html: Chat UI and message handling
+views.py: quickbooks_chat() processes messages
+openai_function_caller.py: Manages AI interactions
+Response flows back to chat UI
+
+Common Components
+base.html: Template with nav and common styles
+text_formatter.py: Formats AI responses
+chart_manager.py: Handles data visualization
+
+Data Flow
+All paths eventually use the AI analysis system and return formatted results with optional charts to the user interface.

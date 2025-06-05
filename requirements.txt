@@ -70,3 +70,6 @@ urllib3==2.2.1
 webencodings==0.5.1
 zipp==3.18.1
 zopfli==0.2.3
+dj-database-url==2.1.0
+psycopg2-binary==2.9.9
+whitenoise==6.6.0
