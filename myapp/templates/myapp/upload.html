@@ -227,6 +227,7 @@
         <div id="quickbooksChat" style="display: none;">
           <div id="chatMessages" class="border p-3 mb-3" style="height: 300px; overflow-y: auto;">
             <!-- Chat messages will be appended here -->
+
           </div>
           <form id="chatForm">
             <div class="input-group">
@@ -256,6 +257,9 @@
         <p id="outputMessage"></p>
       {% endif %}
     </div>
+
+
+
 
     <!--<button id="savePdfButton" class="btn btn-secondary">Save as PDF</button>-->
   </div>
@@ -423,6 +427,17 @@
     
       // Function to send message to server
       function sendMessageToServer(message) {
+
+        const chatMessages = document.getElementById('chatMessages');
+
+        //create and appent thingkind indicator 
+        const thinkingElement = document.createElement('div');
+        thinkingElement.className = 'thinking';
+        thinkingElement.innerHTML =  '<strong>AI:</strong> <span>AI is thinking</span>';
+        chatMessages.appendChild(thinkingElement);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+
         fetch('/quickbooks_chat/', {
           method: 'POST',
           headers: {
@@ -433,6 +448,8 @@
         })
         .then(response => response.json())
         .then(data => {
+          // Hide thinking indicator
+          thinkingElement.remove();
           const chatMessages = document.getElementById('chatMessages');
           const messageElement = document.createElement('div');
           messageElement.innerHTML = `<strong>AI:</strong> <div class="ai-response">${data.response}</div>`;
@@ -440,6 +457,7 @@
           chatMessages.scrollTop = chatMessages.scrollHeight;
         })
         .catch(error => {
+          thinkingElement.remove();
           console.error('Error:', error);
           appendMessage('System', 'An error occurred. Please try again.');
         });
@@ -495,6 +513,7 @@
       setupEventListeners();
       checkQuickBooksAuth();
     });
+
     </script>
 {% endblock %}
 

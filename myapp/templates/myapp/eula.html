@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}End User License Agreement - Relogue AI{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-body p-5">
+                    <h1 class="text-center mb-4">End User License Agreement</h1>
+                    <p class="text-muted text-center mb-5">Effective Date: January 6, 2025</p>
+                    
+                    <div class="legal-content">
+                        <h2>1. Agreement to Terms</h2>
+                        <p>By accessing or using Relogue AI ("Service"), you agree to be bound by this End User License Agreement ("Agreement"). If you do not agree to these terms, do not use the Service.</p>
+                        
+                        <h2>2. License Grant</h2>
+                        <p>Relogue AI grants you a non-exclusive, non-transferable, revocable license to use the Service for your business financial analysis needs, subject to the terms of this Agreement.</p>
+                        
+                        <h2>3. Description of Service</h2>
+                        <p>Relogue AI provides:</p>
+                        <ul>
+                            <li>Financial statement analysis using artificial intelligence</li>
+                            <li>Integration with QuickBooks for real-time financial data access</li>
+                            <li>Upload and analysis of Excel-based financial reports</li>
+                            <li>AI-generated insights and recommendations</li>
+                            <li>Interactive financial data visualization</li>
+                        </ul>
+                        
+                        <h2>4. Acceptable Use</h2>
+                        <p>You agree to use the Service only for lawful purposes and in accordance with this Agreement. You agree not to:</p>
+                        <ul>
+                            <li>Upload false, misleading, or fraudulent financial data</li>
+                            <li>Use the Service to violate any applicable laws or regulations</li>
+                            <li>Attempt to reverse engineer or compromise the Service</li>
+                            <li>Share login credentials with unauthorized parties</li>
+                            <li>Use the Service for competitive analysis against Relogue AI</li>
+                        </ul>
+                        
+                        <h2>5. Data Usage and AI Processing</h2>
+                        <p>By using the Service, you acknowledge and agree that:</p>
+                        <ul>
+                            <li>Your financial data will be processed by AI models (OpenAI GPT) to generate insights</li>
+                            <li>Anonymized usage patterns may be used to improve the Service</li>
+                            <li>Your specific financial data will not be shared with other users</li>
+                            <li>AI-generated insights are suggestions and should not replace professional financial advice</li>
+                        </ul>
+                        
+                        <h2>6. QuickBooks Integration</h2>
+                        <p>If you choose to connect your QuickBooks account:</p>
+                        <ul>
+                            <li>You authorize Relogue AI to access your QuickBooks financial data</li>
+                            <li>Access is limited to read-only permissions for reports</li>
+                            <li>You can revoke access at any time through your QuickBooks settings</li>
+                            <li>Relogue AI stores authentication tokens securely to maintain your connection</li>
+                        </ul>
+                        
+                        <h2>7. Intellectual Property</h2>
+                        <p>The Service, including all content, features, and functionality, is owned by Relogue AI and is protected by international copyright, trademark, and other intellectual property laws.</p>
+                        
+                        <h2>8. Disclaimer of Warranties</h2>
+                        <p>THE SERVICE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. RELOGUE AI DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.</p>
+                        
+                        <h2>9. Limitation of Liability</h2>
+                        <p>IN NO EVENT SHALL RELOGUE AI BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING FROM YOUR USE OF THE SERVICE. OUR TOTAL LIABILITY SHALL NOT EXCEED THE AMOUNT PAID BY YOU FOR THE SERVICE IN THE PAST TWELVE MONTHS.</p>
+                        
+                        <h2>10. Financial Advice Disclaimer</h2>
+                        <p><strong>IMPORTANT:</strong> Relogue AI provides data analysis and insights based on the information you provide. The Service does not provide financial, investment, tax, legal, or accounting advice. Always consult with qualified professionals before making business decisions based on the insights provided.</p>
+                        
+                        <h2>11. Data Accuracy</h2>
+                        <p>You are responsible for ensuring the accuracy of all financial data uploaded or imported into the Service. Relogue AI is not responsible for errors resulting from inaccurate or incomplete data.</p>
+                        
+                        <h2>12. Termination</h2>
+                        <p>Either party may terminate this Agreement at any time. Upon termination:</p>
+                        <ul>
+                            <li>Your access to the Service will be revoked</li>
+                            <li>You may request deletion of your data within 30 days</li>
+                            <li>Certain provisions of this Agreement will survive termination</li>
+                        </ul>
+                        
+                        <h2>13. Changes to Agreement</h2>
+                        <p>We may update this Agreement from time to time. We will notify you of any material changes via email or through the Service. Continued use after changes constitutes acceptance.</p>
+                        
+                        <h2>14. Governing Law</h2>
+                        <p>This Agreement shall be governed by the laws of [Your Jurisdiction], without regard to its conflict of law provisions.</p>
+                        
+                        <h2>15. Contact Information</h2>
+                        <p>For questions about this Agreement, please contact us at:</p>
+                        <p>Email: legal@relogue.com<br>
+                        Address: [Your Business Address]</p>
+                    </div>
+                    
+                    <div class="text-center mt-5">
+                        <a href="{% url 'home' %}" class="btn btn-primary">Return to Home</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.legal-content h2 {
+    color: #333;
+    font-size: 1.3rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+.legal-content p, .legal-content li {
+    color: #555;
+    line-height: 1.6;
+}
+
+.legal-content ul {
+    margin-bottom: 1rem;
+}
+</style>
+{% endblock %}

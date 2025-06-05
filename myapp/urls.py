@@ -12,4 +12,6 @@ urlpatterns = [
     path('start_quickbooks_auth/', views.start_quickbooks_auth, name='start_quickbooks_auth'),
     path('quickbooks_chat/', views.quickbooks_chat, name='quickbooks_chat'),
     path('check_quickbooks_auth/', views.check_quickbooks_auth, name='check_quickbooks_auth'),
+    path('privacy/', views.privacy_policy, name='privacy_policy'),
+    path('eula/', views.eula, name='eula'),
 ]

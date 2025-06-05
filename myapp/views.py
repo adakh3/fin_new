@@ -151,11 +151,20 @@ def quickbooks_callback(request):
         return redirect('error_page')
 
 
+
+
 # Update the existing quickbooks_report_analysis view
 @csrf_exempt
 @require_POST
 @login_required
 def quickbooks_report_analysis(request):
+    """
+    Handles QuickBooks report requests and analysis:
+    1. Authenticates with QuickBooks
+    2. Gets requested financial report (P&L, Balance Sheet, etc.)
+    3. Processes report data for insights
+    4. Returns formatted results with charts
+    """
     data = json.loads(request.body)
     qb_auth = QuickbooksAuth(user=request.user)
     
@@ -219,8 +228,8 @@ def quickbooks_report_analysis(request):
         logger.error(f"Error in quickbooks_report_analysis: {str(e)}")
         return JsonResponse({'error': str(e)}, status=400)
     
-
     from django.shortcuts import redirect
+
 
 def after_logout(request):
     return redirect('home')
@@ -237,10 +246,10 @@ def quickbooks_chat(request):
     
     # Get or create an OpenAIFunctionCaller instance for this user
     if request.user.id not in function_callers:
-        function_callers[request.user.id] = OpenAIFunctionCaller(request.user, "gpt-4o-mini")
+        function_callers[request.user.id] = OpenAIFunctionCaller(request.user, "gpt-4o-mini", "resources/function_call_prompt.txt")
     
     function_caller = function_callers[request.user.id]
-    ai_response = function_caller.process_message(user_message)
+    ai_response = function_caller.process_message(user_message, "resources/summarise_fin_analysis_prompt.txt")
 
     # Convert markdown to HTML
     html_response = markdown.markdown(ai_response)
@@ -261,3 +270,9 @@ def check_quickbooks_auth(request):
     qb_auth = QuickbooksAuth(request.user)
     is_valid = qb_auth.ensure_valid_token()
     return JsonResponse({'is_valid': is_valid})
+
+def privacy_policy(request):
+    return render(request, 'myapp/privacy.html')
+
+def eula(request):
+    return render(request, 'myapp/eula.html')

@@ -64,7 +64,7 @@ class QuickbooksIntegrator:
             customers =  Customer.all(qb=self.client)
             return customers
 
-    def get_report(self, report_type, start_date=None, end_date=None):
+    def get_report(self, report_type, start_date=None, end_date=None, comparison_start_date=None, comparison_end_date=None, summarize_column_by=None):
         """
         Retrieves a report from QuickBooks for the specified report type and date range.
 
@@ -81,11 +81,16 @@ class QuickbooksIntegrator:
         if not end_date:
             end_date = datetime.now().strftime('%Y-%m-%d')
 
+        if not summarize_column_by:
+            summarize_column_by = 'Month'
+
         try:
             params = {
                 'start_date': start_date,
                 'end_date': end_date,
-                'summarize_column_by': 'Month'
+                'summarize_column_by': summarize_column_by,
+                'comparison_start_date': comparison_start_date,
+                'comparison_end_date': comparison_end_date,                
             }
             
             report = self.client.get_report(report_type=report_type, qs=params)

@@ -13,6 +13,10 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 import os
 from intuitlib.enums import Scopes
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -22,12 +26,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-427n+smwlo-=_vu#qwgm2lm8(8=gmrgk+ks9ly8o&db_t&g$tq'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-427n+smwlo-=_vu#qwgm2lm8(8=gmrgk+ks9ly8o&db_t&g$tq')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = []
+# For development, use localhost; for production, set DJANGO_ALLOWED_HOSTS env var
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 
 # Application definition
@@ -121,7 +126,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -130,29 +139,56 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-ALLOWED_HOSTS = ['sea-turtle-app-dr5wz.ondigitalocean.app', 'www.relogue.com', 'relogue.com', 'localhost']
+# Production hosts should be set via DJANGO_ALLOWED_HOSTS env var
+# Example: DJANGO_ALLOWED_HOSTS='www.relogue.com,relogue.com,sea-turtle-app-dr5wz.ondigitalocean.app'
 
 LOGIN_URL = '/login/'
 LOGOUT_REDIRECT_URL = 'home'
 LOGIN_REDIRECT_URL = 'home'
 
 
-QB_APP_ENV = 'sandbox'
-QB_REDIRECT_URL = 'http://localhost:8000/quickbooks/callback/'
+QB_APP_ENV = os.environ.get('QB_APP_ENV', 'sandbox')
+# For production, set QB_REDIRECT_URL to your production URL
+QB_REDIRECT_URL = os.environ.get('QB_REDIRECT_URL', 'http://localhost:8000/quickbooks/callback/')
 #QB_REDIRECT_URL = 'http://localhost:8000'
 #QUICKBOOKS_SCOPE = 'com.intuit.quickbooks.accounting'
 
-#this is for the relogue client - this will stay the same for production, but perhaps in env variables in the future
-QUICKBOOKS_CLIENT_ID = 'ABeJieEWZIujd5ZU6gigEYcnFSjSgElDrSv8tYoNIeaNB5NsA3'
-QUICKBOOKS_CLIENT_SECRET = 'Ef0QyYIrFNhZtMplSQ6hNEYRS03wRwD9ZMw4DccS'
+# QuickBooks OAuth credentials - should be in environment variables for production
+QUICKBOOKS_CLIENT_ID = os.environ.get('QB_CLIENT_ID', 'ABeJieEWZIujd5ZU6gigEYcnFSjSgElDrSv8tYoNIeaNB5NsA3')
+QUICKBOOKS_CLIENT_SECRET = os.environ.get('QB_CLIENT_SECRET', 'Ef0QyYIrFNhZtMplSQ6hNEYRS03wRwD9ZMw4DccS')
 
-#for GB Sandbox company, get it from the Oatuh2.0 playground
-QUICKBOOKS_REALM_ID = '9341452098469139'
-QUICKBOOKS_AUTH_CODE = 'AB11726690447ocCuhwn5mVUqKjs3R5AVu6PjXIoOYKRM7zVuk'
-#this is the refresh token for the sandbox, expires in 101 days
-QUICKBOOKS_REFRESH_TOKEN = 'AB11736349060BQsMwnMIYExO5FyVUS2bJ1zojkZ9187psQxps' 
-#expires in 60 mins, but then the refresh token is used to get a new one
-QUICKBOOKS_ACCESS_TOKEN = 'eyJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0..8sP0UM8dANApzt3ekpc6lA.9Du4hQRKGSKCwEw-3SiLtail8KPtJSnOy0WCSQf7PwC3zuZeF6knjiKabNMTZTT-GLEPbUy6UXe81czosJmy5V05yf9yZZ4iiGm6M4qo7BZOyBI5AiYGtvz-Od0WbiCXwLn0jrkWyQrvkZpFREnAmzkWD4F2Ux31EeDzV4NP563Hef_vUos-Y8_BjGsWvRTlO-2dHBSu4ylwUgrm6Dy7mSBH0MpYs5dCyZN7g7SwzGBjwgw4GxniTZHWsYMLceJguvNTi8wBoJsjJ1fCHWKXnQA_KKWjIdYvyyfgCQkkxz9-ODFUsIiwB9TzDC-nBbp16lAn00auotEli_JKn3m2ON6eFIfePnCf6cPW94HY1SHqJuP8MKYLZVN5A387z8SJ28XSJw58MmCnxMmyPzhNefopb3xkAIYT6H5XvCx4hX8t-nv0ORHHYWDElZFfXKmB3RastPFv-n6JHvkAlU5a2eZsNXHcJU0JOQ0WXFPk6-v48gRn4WZOuSRZlF6Xa17Mo5QfN0VZg11jpA7rsuSJUCjXTWwCVFGEy4XuMVmMHoP292E1IWR82Tv6KOfvw5VUJbUr6eI0WmwXOvAfu3Qs1DdRRkc2jgPkCiQ32DSGGK8LlCceWWv5qDT1AyhJjfeP-5UuM2JCYH2geLs6E9hTKUAvIBpYacZ0u3bxnZJBeZ50frxd1V2loRzbH3wuefIuxLTrJ1h6ior68xuVBIN1skF_aUrRWdR2y1NZkQT49UHyITUdGFfH5B8m4DPndvzN.gCfqp4nz80qtZtf7oTRs9g'
+# QuickBooks sandbox credentials - these should be stored securely in production
+# For production, use environment variables and never commit tokens to source control
+QUICKBOOKS_REALM_ID = os.environ.get('QUICKBOOKS_REALM_ID', '9341452098469139')
+QUICKBOOKS_AUTH_CODE = os.environ.get('QUICKBOOKS_AUTH_CODE', '')
+QUICKBOOKS_REFRESH_TOKEN = os.environ.get('QUICKBOOKS_REFRESH_TOKEN', '')
+QUICKBOOKS_ACCESS_TOKEN = os.environ.get('QUICKBOOKS_ACCESS_TOKEN', '')
+
+# Security settings for production
+if not DEBUG:
+    # HTTPS settings
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    
+    # Security headers
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+    
+    # HSTS settings
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+# Session security
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
+
+# Additional security settings
+SECURE_REFERRER_POLICY = 'same-origin'
 
 
 
