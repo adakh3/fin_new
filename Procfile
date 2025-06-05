@@ -1,1 +1,1 @@
-web: gunicorn --bind :$PORT fin_analysis_django.wsgi:application
+web: gunicorn --bind :$PORT app:app
